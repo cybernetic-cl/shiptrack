@@ -249,6 +249,16 @@
     }
   };
 
+  // ── DELETE ENVIO ──
+  window.fbDeleteEnvio = async function(id) {
+    await deleteDoc(doc(db, 'envios', id));
+  };
+
+  // ── DELETE DEVOLUCION ──
+  window.fbDeleteDevolucion = async function(id) {
+    await deleteDoc(doc(db, 'devoluciones', id));
+  };
+
   // Expose loadAll and db
   window._fbLoaded = true;
   loadAll();
@@ -383,11 +393,11 @@
               <tr>
                 <th>#</th><th>Fecha</th><th>Transportista</th><th>Empresa</th>
                 <th>Tipo paq.</th><th>Cant.</th><th>Tipo envío</th>
-                <th>Monto</th><th>Vendedor</th><th>Pago</th>
+                <th>Monto</th><th>Vendedor</th><th>Pago</th><th></th>
               </tr>
             </thead>
             <tbody id="tbody-envios">
-              <tr class="empty-row"><td colspan="10">Sin registros aún</td></tr>
+              <tr class="empty-row"><td colspan="11">Sin registros aún</td></tr>
             </tbody>
           </table>
         </div>
@@ -563,11 +573,11 @@
               <tr>
                 <th>#</th><th>Fecha</th><th>Transportista</th><th>Empresa</th>
                 <th>Tipo paq.</th><th>Cant.</th><th>Tipo envío</th>
-                <th>Monto</th><th>Vendedor</th><th>Pago</th>
+                <th>Monto</th><th>Vendedor</th><th>Pago</th><th></th>
               </tr>
             </thead>
             <tbody id="tbody-devoluciones">
-              <tr class="empty-row"><td colspan="10">Sin devoluciones registradas</td></tr>
+              <tr class="empty-row"><td colspan="11">Sin devoluciones registradas</td></tr>
             </tbody>
           </table>
         </div>
@@ -808,7 +818,7 @@ function limpiarForm() {
 function renderTabla() {
   const tbody = document.getElementById('tbody-envios');
   if (!state.envios.length) {
-    tbody.innerHTML = '<tr class="empty-row"><td colspan="10">Sin registros aún</td></tr>';
+    tbody.innerHTML = '<tr class="empty-row"><td colspan="11">Sin registros aún</td></tr>';
     return;
   }
   const tm = { flex:'Flex', cobrar:'Por Cobrar', pagado:'Pagado' };
@@ -826,6 +836,7 @@ function renderTabla() {
       <td style="color:var(--success)">${e.monto != null ? '$'+e.monto.toLocaleString('es-CL') : '<span style="color:var(--text3)">—</span>'}</td>
       <td>${e.vendedor}</td>
       <td>${e.pago==='transferencia'?'🏦 Transferencia':'💵 Efectivo'}</td>
+      <td><button class="btn btn-danger btn-sm" onclick="eliminarEnvio('${e._id||e.id}')">✕</button></td>
     </tr>
   `).join('');
 }
@@ -1200,7 +1211,7 @@ function renderTablaDev() {
   const tbody = document.getElementById('tbody-devoluciones');
   if (!tbody) return;
   if (!state.devoluciones.length) {
-    tbody.innerHTML = '<tr class="empty-row"><td colspan="10">Sin devoluciones registradas</td></tr>';
+    tbody.innerHTML = '<tr class="empty-row"><td colspan="11">Sin devoluciones registradas</td></tr>';
     return;
   }
   const tm = { flex:'Flex', cobrar:'Por Cobrar', pagado:'Pagado' };
@@ -1218,6 +1229,7 @@ function renderTablaDev() {
       <td style="color:var(--red)">${e.monto != null ? '- $'+e.monto.toLocaleString('es-CL') : '<span style="color:var(--text3)">—</span>'}</td>
       <td>${e.vendedor}</td>
       <td>${e.pago==='transferencia'?'🏦 Transferencia': e.pago==='efectivo'?'💵 Efectivo':'—'}</td>
+      <td><button class="btn btn-danger btn-sm" onclick="eliminarDevolucion('${e._id||e.id}')">✕</button></td>
     </tr>
   `).join('');
 }
@@ -1369,6 +1381,26 @@ function renderComisiones() {
 
   html += '</tbody></table>';
   tabla.innerHTML = html;
+}
+
+function eliminarDevolucion(id) {
+  if (!confirm('¿Eliminar esta devolución?')) return;
+  state.devoluciones = state.devoluciones.filter(e => (e._id || e.id) !== id);
+  if (window.fbDeleteDevolucion) {
+    window.fbDeleteDevolucion(id).catch(() => showToast('⚠ Error al eliminar', true));
+  }
+  renderTablaDev();
+  showToast('✓ Devolución eliminada');
+}
+
+function eliminarEnvio(id) {
+  if (!confirm('¿Eliminar este registro?')) return;
+  state.envios = state.envios.filter(e => (e._id || e.id) !== id);
+  if (window.fbDeleteEnvio) {
+    window.fbDeleteEnvio(id).catch(() => showToast('⚠ Error al eliminar', true));
+  }
+  renderTabla();
+  showToast('✓ Registro eliminado');
 }
 
 function showLoader(show) {
