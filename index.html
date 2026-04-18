@@ -836,7 +836,7 @@ function renderTabla() {
       <td>${e.fecha}</td>
       <td>${e.trans}</td>
       <td>${e.emp}</td>
-      <td>${pm[e.tipoPaq]||e.tipoPaq}</td>
+      <td>${pm[e.tipoPaq]||e.tipoPaq}${precioPaq > 0 ? '<br><span style="color:var(--accent2);font-size:10px;">$'+precioPaq.toLocaleString('es-CL')+'</span>' : ''}</td>
       <td style="text-align:center">${e.cant}</td>
       <td><span class="tipo-indicator ${tc[e.tipoEnv]}">${tm[e.tipoEnv]}</span></td>
       <td style="color:var(--accent2)">${costoStr}</td>
