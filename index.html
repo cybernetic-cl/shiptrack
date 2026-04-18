@@ -711,7 +711,7 @@ function populateSelect(id, items) {
 }
 
 
-let adminUnlocked = false;
+let adminUnlocked = localStorage.getItem('shiptrack_admin') === '1';
 let pendingAdminPage = null;
 let pendingAdminEl = null;
 
@@ -733,6 +733,7 @@ function checkAdminPass() {
   const val = document.getElementById('admin-pass-input').value;
   if (val === 'Cy1234') {
     adminUnlocked = true;
+    localStorage.setItem('shiptrack_admin', '1');
     closeAdminModal();
     if (pendingAdminPage) showPage(pendingAdminPage, pendingAdminEl);
   } else {
@@ -1411,6 +1412,8 @@ function eliminarDevolucion(id) {
     window.fbDeleteDevolucion(id).catch(() => showToast('⚠ Error al eliminar', true));
   }
   renderTablaDev();
+  renderReportes();
+  renderComisiones();
   showToast('✓ Devolución eliminada');
 }
 
@@ -1421,6 +1424,8 @@ function eliminarEnvio(id) {
     window.fbDeleteEnvio(id).catch(() => showToast('⚠ Error al eliminar', true));
   }
   renderTabla();
+  renderReportes();
+  renderComisiones();
   showToast('✓ Registro eliminado');
 }
 
