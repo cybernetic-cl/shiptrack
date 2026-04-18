@@ -836,9 +836,16 @@ function renderTabla() {
       <td style="color:var(--success)">${e.monto != null ? '$'+e.monto.toLocaleString('es-CL') : '<span style="color:var(--text3)">—</span>'}</td>
       <td>${e.vendedor}</td>
       <td>${e.pago==='transferencia'?'🏦 Transferencia':'💵 Efectivo'}</td>
-      <td><button class="btn btn-danger btn-sm" onclick="eliminarEnvio('${e._id||e.id}')">✕</button></td>
+      <td><button class="btn btn-danger btn-sm" data-del-envio="${e._id||e.id}">✕</button></td>
     </tr>
   `).join('');
+
+  // Event delegation for delete buttons
+  tbody.querySelectorAll('[data-del-envio]').forEach(btn => {
+    btn.addEventListener('click', function() {
+      eliminarEnvio(this.getAttribute('data-del-envio'));
+    });
+  });
 }
 
 function initReporteFiltros() {
@@ -1217,7 +1224,8 @@ function renderTablaDev() {
   const tm = { flex:'Flex', cobrar:'Por Cobrar', pagado:'Pagado' };
   const tc = { flex:'tipo-flex', cobrar:'tipo-cobrar', pagado:'tipo-pagado' };
   const pm = { standard:'Standard', rural:'Rural' };
-  tbody.innerHTML = [...state.devoluciones].reverse().map(e => `
+  const tbodyDev = document.getElementById('tbody-devoluciones');
+  tbodyDev.innerHTML = [...state.devoluciones].reverse().map(e => `
     <tr>
       <td><strong style="color:var(--red)">#${e.id}</strong></td>
       <td>${e.fecha}</td>
@@ -1229,9 +1237,15 @@ function renderTablaDev() {
       <td style="color:var(--red)">${e.monto != null ? '- $'+e.monto.toLocaleString('es-CL') : '<span style="color:var(--text3)">—</span>'}</td>
       <td>${e.vendedor}</td>
       <td>${e.pago==='transferencia'?'🏦 Transferencia': e.pago==='efectivo'?'💵 Efectivo':'—'}</td>
-      <td><button class="btn btn-danger btn-sm" onclick="eliminarDevolucion('${e._id||e.id}')">✕</button></td>
+      <td><button class="btn btn-danger btn-sm" data-del-dev="${e._id||e.id}">✕</button></td>
     </tr>
   `).join('');
+
+  tbody.querySelectorAll('[data-del-dev]').forEach(btn => {
+    btn.addEventListener('click', function() {
+      eliminarDevolucion(this.getAttribute('data-del-dev'));
+    });
+  });
 }
 
 
@@ -1385,7 +1399,7 @@ function renderComisiones() {
 
 function eliminarDevolucion(id) {
   if (!confirm('¿Eliminar esta devolución?')) return;
-  state.devoluciones = state.devoluciones.filter(e => (e._id || e.id) !== id);
+  state.devoluciones = state.devoluciones.filter(e => String(e._id || e.id) !== String(id));
   if (window.fbDeleteDevolucion) {
     window.fbDeleteDevolucion(id).catch(() => showToast('⚠ Error al eliminar', true));
   }
@@ -1395,7 +1409,7 @@ function eliminarDevolucion(id) {
 
 function eliminarEnvio(id) {
   if (!confirm('¿Eliminar este registro?')) return;
-  state.envios = state.envios.filter(e => (e._id || e.id) !== id);
+  state.envios = state.envios.filter(e => String(e._id || e.id) !== String(id));
   if (window.fbDeleteEnvio) {
     window.fbDeleteEnvio(id).catch(() => showToast('⚠ Error al eliminar', true));
   }
