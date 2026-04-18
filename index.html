@@ -393,11 +393,11 @@
               <tr>
                 <th>#</th><th>Fecha</th><th>Transportista</th><th>Empresa</th>
                 <th>Tipo paq.</th><th>Cant.</th><th>Tipo envío</th>
-                <th>Monto</th><th>Vendedor</th><th>Pago</th><th></th>
+                <th>Costo envío</th><th>Monto part.</th><th>Vendedor</th><th>Pago</th><th></th>
               </tr>
             </thead>
             <tbody id="tbody-envios">
-              <tr class="empty-row"><td colspan="11">Sin registros aún</td></tr>
+              <tr class="empty-row"><td colspan="12">Sin registros aún</td></tr>
             </tbody>
           </table>
         </div>
@@ -573,7 +573,7 @@
               <tr>
                 <th>#</th><th>Fecha</th><th>Transportista</th><th>Empresa</th>
                 <th>Tipo paq.</th><th>Cant.</th><th>Tipo envío</th>
-                <th>Monto</th><th>Vendedor</th><th>Pago</th><th></th>
+                <th>Costo envío</th><th>Monto part.</th><th>Vendedor</th><th>Pago</th><th></th>
               </tr>
             </thead>
             <tbody id="tbody-devoluciones">
@@ -818,14 +818,20 @@ function limpiarForm() {
 function renderTabla() {
   const tbody = document.getElementById('tbody-envios');
   if (!state.envios.length) {
-    tbody.innerHTML = '<tr class="empty-row"><td colspan="11">Sin registros aún</td></tr>';
+    tbody.innerHTML = '<tr class="empty-row"><td colspan="12">Sin registros aún</td></tr>';
     return;
   }
   const tm = { flex:'Flex', cobrar:'Por Cobrar', pagado:'Pagado' };
   const tc = { flex:'tipo-flex', cobrar:'tipo-cobrar', pagado:'tipo-pagado' };
   const pm = { standard:'Standard', rural:'Rural' };
-  tbody.innerHTML = [...state.envios].reverse().map(e => `
-    <tr>
+  tbody.innerHTML = [...state.envios].reverse().map(e => {
+    const precioKey = (e.trans||'') + '|' + (e.tipoPaq||'');
+    const precioPaq = parseInt(state.precios[precioKey]) || 0;
+    const costoEnvio = (parseInt(e.cant)||0) * precioPaq;
+    const costoStr = costoEnvio > 0 ? '$'+costoEnvio.toLocaleString('es-CL') : '<span style="color:var(--text3)">—</span>';
+    const montoStr = e.monto != null ? '$'+e.monto.toLocaleString('es-CL') : '<span style="color:var(--text3)">—</span>';
+    const delId = e._id || e.id;
+    return `<tr>
       <td><strong style="color:var(--accent)">#${e.id}</strong></td>
       <td>${e.fecha}</td>
       <td>${e.trans}</td>
@@ -833,17 +839,18 @@ function renderTabla() {
       <td>${pm[e.tipoPaq]||e.tipoPaq}</td>
       <td style="text-align:center">${e.cant}</td>
       <td><span class="tipo-indicator ${tc[e.tipoEnv]}">${tm[e.tipoEnv]}</span></td>
-      <td style="color:var(--success)">${e.monto != null ? '$'+e.monto.toLocaleString('es-CL') : '<span style="color:var(--text3)">—</span>'}</td>
+      <td style="color:var(--accent2)">${costoStr}</td>
+      <td style="color:var(--success)">${montoStr}</td>
       <td>${e.vendedor}</td>
       <td>${e.pago==='transferencia'?'🏦 Transferencia':'💵 Efectivo'}</td>
-      <td><button class="btn btn-danger btn-sm" data-del-envio="${e._id||e.id}">✕</button></td>
-    </tr>
-  `).join('');
+      <td><button class="btn btn-danger btn-sm" style="padding:4px 8px;" data-del-id="${delId}">✕</button></td>
+    </tr>`;
+  }).join('');
 
   // Event delegation for delete buttons
-  tbody.querySelectorAll('[data-del-envio]').forEach(btn => {
+  tbody.querySelectorAll('[data-del-id]').forEach(btn => {
     btn.addEventListener('click', function() {
-      eliminarEnvio(this.getAttribute('data-del-envio'));
+      eliminarEnvio(this.getAttribute('data-del-id'));
     });
   });
 }
