@@ -628,6 +628,10 @@
           <div class="card-title">&#128202; Detalle por canal de venta</div>
           <div id="ec-reporte-canal" style="color:var(--text3);text-align:center;padding:24px;font-style:italic;">Sin datos para este período</div>
         </div>
+        <div class="card" style="margin-top:20px;">
+          <div class="card-title">&#127970; Paquetes despachados por empresa</div>
+          <div id="ec-reporte-empresa" style="color:var(--text3);text-align:center;padding:24px;font-style:italic;">Sin datos para este período</div>
+        </div>
 
       </div>
     </div>
@@ -2183,6 +2187,28 @@ function renderReportesEc() {
       };
       const colors = ['var(--accent)','var(--accent2)','var(--success)','#f7d44f','#c084fc','var(--red)'];
       canalDiv.innerHTML = '<div style="max-width:500px">' + Object.entries(byCanal).map(([k,v],i) => bar(k, v, total, colors[i%colors.length])).join('') + '</div>';
+    }
+  }
+
+  // Empresa breakdown — paquetes despachados por empresa
+  const empresaDiv = document.getElementById('ec-reporte-empresa');
+  if (empresaDiv) {
+    if (!registros.length) {
+      empresaDiv.innerHTML = '<div style="color:var(--text3);text-align:center;padding:24px;font-style:italic;">Sin datos para este período</div>';
+    } else {
+      const byEmpresa = {};
+      registros.forEach(r => {
+        const k = r.emp || 'Sin empresa';
+        byEmpresa[k] = (byEmpresa[k]||0) + (parseInt(r.cant)||0);
+      });
+      const maxVal = Math.max(...Object.values(byEmpresa));
+      const bar = (label, val, max, color) => {
+        const pct = max > 0 ? Math.round(val/max*100) : 0;
+        return '<div style="margin-bottom:12px"><div style="display:flex;justify-content:space-between;margin-bottom:4px"><span style="font-size:13px;color:var(--text2)">' + label + '</span><span style="font-size:12px;color:' + color + ';font-family:var(--font-mono)">' + val + ' paq.</span></div><div style="background:var(--border);border-radius:4px;height:6px;overflow:hidden"><div style="background:' + color + ';width:' + pct + '%;height:100%;border-radius:4px"></div></div></div>';
+      };
+      const colors = ['var(--accent2)','var(--accent)','var(--success)','#f7d44f','#c084fc','var(--red)'];
+      const sorted = Object.entries(byEmpresa).sort((a,b) => b[1]-a[1]);
+      empresaDiv.innerHTML = '<div style="max-width:500px">' + sorted.map(([k,v],i) => bar(k, v, maxVal, colors[i%colors.length])).join('') + '</div>';
     }
   }
 }
