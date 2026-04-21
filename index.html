@@ -307,8 +307,25 @@
   // ── ECOMMERCE CONFIG ──
   async function loadEcCollection(col, stateKey) {
     const snap = await loadCollection(col);
-    state[stateKey] = snap.map(d => d.nombre);
-    state._ids[stateKey] = Object.fromEntries(snap.map(d => [d.nombre, d._id]));
+    // Deduplicate: keep only the first occurrence of each nombre (case-insensitive)
+    const seen = {};
+    const unique = [];
+    const toDelete = [];
+    for (const d of snap) {
+      const key = (d.nombre||'').toLowerCase();
+      if (seen[key]) {
+        toDelete.push(d._id); // mark duplicate for deletion
+      } else {
+        seen[key] = true;
+        unique.push(d);
+      }
+    }
+    // Delete duplicates from Firebase silently
+    for (const id of toDelete) {
+      try { await deleteDoc(doc(db, col, id)); } catch(e) {}
+    }
+    state[stateKey] = unique.map(d => d.nombre);
+    state._ids[stateKey] = Object.fromEntries(unique.map(d => [d.nombre, d._id]));
   }
   window.fbEcAdd = async function(col, stateKey, nombre) {
     const ref = await addDoc(collection(db, col), { nombre });
@@ -1932,14 +1949,25 @@ function ecAddItem(stateKey, inputId, containerId) {
   const el = document.getElementById(inputId);
   const nombre = el.value.trim();
   if (!nombre) return showToast('⚠ Escribe un nombre', true);
-  if ((state[stateKey]||[]).some(x => x.toLowerCase() === nombre.toLowerCase())) return showToast('⚠ Ya existe: ' + nombre, true);
-  const colMap = { ecTransportistas:'ecTransportistas', ecEmpresas:'ecEmpresas', ecCanales:'ecCanales', ecEstados:'ecEstados' };
   if (!state[stateKey]) state[stateKey] = [];
-  state[stateKey].push(nombre);
+  if (state[stateKey].some(x => x.toLowerCase() === nombre.toLowerCase())) return showToast('⚠ Ya existe: ' + nombre, true);
+  const colMap = { ecTransportistas:'ecTransportistas', ecEmpresas:'ecEmpresas', ecCanales:'ecCanales', ecEstados:'ecEstados' };
   el.value = '';
-  if (window.fbEcAdd) window.fbEcAdd(colMap[stateKey], stateKey, nombre).catch(() => showToast('⚠ Error al guardar', true));
+  // Push to state immediately for UI
+  state[stateKey].push(nombre);
   renderEcList(stateKey, containerId);
   populateSelects();
+  // Save to Firebase — if it fails, roll back
+  if (window.fbEcAdd) {
+    window.fbEcAdd(colMap[stateKey], stateKey, nombre).catch(() => {
+      // rollback
+      const i = state[stateKey].indexOf(nombre);
+      if (i !== -1) state[stateKey].splice(i, 1);
+      renderEcList(stateKey, containerId);
+      populateSelects();
+      showToast('⚠ Error al guardar', true);
+    });
+  }
   showToast('✓ Agregado: ' + nombre);
 }
 
