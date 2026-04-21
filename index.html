@@ -104,6 +104,8 @@
   .tipo-flex { background: rgba(79,142,247,0.15); color: var(--accent); }
   .tipo-cobrar { background: rgba(247,146,79,0.15); color: var(--accent2); }
   .tipo-pagado { background: rgba(79,202,122,0.15); color: var(--success); }
+  .tipo-acuerdo { background: rgba(168,85,247,0.15); color: #c084fc; }
+  .tipo-cambio { background: rgba(20,184,166,0.15); color: #2dd4bf; }
 
   .precio-auto { display: flex; align-items: center; gap: 6px; padding: 8px 12px; background: rgba(79,202,122,0.08); border: 1px solid rgba(79,202,122,0.2); border-radius: 6px; color: var(--success); font-size: 12px; }
 
@@ -178,6 +180,24 @@
       const devs = await loadCollection('devoluciones');
       state.devoluciones = devs.map(d => ({ ...d, id: d._id }));
 
+      // ── Seed default data if not present ──
+      const seedTransportistas = ["Fast Way"];
+      const seedEmpresas = ["Cybernetic SpA", "Mascokits SpA", "Mini Mall SpA"];
+      for (const nombre of seedTransportistas) {
+        if (!state.transportistas.includes(nombre)) {
+          const ref = await addDoc(collection(db, "transportistas"), { nombre });
+          state.transportistas.push(nombre);
+          state._ids.transportistas[nombre] = ref.id;
+        }
+      }
+      for (const nombre of seedEmpresas) {
+        if (!state.empresas.includes(nombre)) {
+          const ref = await addDoc(collection(db, "empresas"), { nombre });
+          state.empresas.push(nombre);
+          state._ids.empresas[nombre] = ref.id;
+        }
+      }
+
     } catch(e) {
       console.error('Error cargando datos:', e);
       showToast('⚠ Error conectando con la base de datos', true);
@@ -201,6 +221,14 @@
     dev.id = ref.id;
     dev._id = ref.id;
     state.devoluciones.push(dev);
+  };
+
+  window.fbEliminarEnvio = async function(firestoreId) {
+    await deleteDoc(doc(db, 'envios', firestoreId));
+  };
+
+  window.fbEliminarDevolucion = async function(firestoreId) {
+    await deleteDoc(doc(db, 'devoluciones', firestoreId));
   };
 
   // ── TRANSPORTISTAS ──
@@ -247,16 +275,6 @@
       if (!state._ids.precios) state._ids.precios = {};
       state._ids.precios[key] = ref.id;
     }
-  };
-
-  // ── DELETE ENVIO ──
-  window.fbDeleteEnvio = async function(id) {
-    await deleteDoc(doc(db, 'envios', id));
-  };
-
-  // ── DELETE DEVOLUCION ──
-  window.fbDeleteDevolucion = async function(id) {
-    await deleteDoc(doc(db, 'devoluciones', id));
   };
 
   // Expose loadAll and db
@@ -340,6 +358,9 @@
               <option value="flex">Flex</option>
               <option value="cobrar">Particular Por Cobrar</option>
               <option value="pagado">Particular Pagado</option>
+              <option value="acuerdo">Acuerdo de Entrega</option>
+              <option value="cambio">Cambio de Producto</option>
+            </select>
             </select>
           </div>
         </div>
@@ -393,11 +414,11 @@
               <tr>
                 <th>#</th><th>Fecha</th><th>Transportista</th><th>Empresa</th>
                 <th>Tipo paq.</th><th>Cant.</th><th>Tipo envío</th>
-                <th>Costo envío</th><th>Monto part.</th><th>Vendedor</th><th>Pago</th><th></th>
+                <th>Monto</th><th>Vendedor</th><th>Pago</th><th>Acciones</th>
               </tr>
             </thead>
             <tbody id="tbody-envios">
-              <tr class="empty-row"><td colspan="12">Sin registros aún</td></tr>
+              <tr class="empty-row"><td colspan="11">Sin registros aún</td></tr>
             </tbody>
           </table>
         </div>
@@ -532,6 +553,8 @@
               <option value="flex">Flex</option>
               <option value="cobrar">Particular Por Cobrar</option>
               <option value="pagado">Particular Pagado</option>
+              <option value="acuerdo">Acuerdo de Entrega</option>
+              <option value="cambio">Cambio de Producto</option>
             </select>
           </div>
         </div>
@@ -573,7 +596,7 @@
               <tr>
                 <th>#</th><th>Fecha</th><th>Transportista</th><th>Empresa</th>
                 <th>Tipo paq.</th><th>Cant.</th><th>Tipo envío</th>
-                <th>Costo envío</th><th>Monto part.</th><th>Vendedor</th><th>Pago</th><th></th>
+                <th>Monto</th><th>Vendedor</th><th>Pago</th><th>Acciones</th>
               </tr>
             </thead>
             <tbody id="tbody-devoluciones">
@@ -649,6 +672,18 @@
   </div>
 </div>
 
+<!-- CONFIRM MODAL -->
+<div id="confirm-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:400;align-items:center;justify-content:center;">
+  <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:28px 32px;width:340px;box-shadow:0 20px 60px rgba(0,0,0,0.5);">
+    <div style="font-size:20px;margin-bottom:10px;">⚠️</div>
+    <div id="confirm-msg" style="font-size:14px;color:var(--text);margin-bottom:24px;line-height:1.5;"></div>
+    <div style="display:flex;gap:10px;justify-content:flex-end;">
+      <button class="btn btn-secondary" onclick="confirmCancel()">Cancelar</button>
+      <button class="btn btn-danger" style="background:rgba(247,79,106,0.2);" onclick="confirmOk()">Sí, eliminar</button>
+    </div>
+  </div>
+</div>
+
 <div id="global-loader" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:300;align-items:center;justify-content:center;flex-direction:column;gap:12px;">
   <div style="width:40px;height:40px;border:3px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin 0.8s linear infinite;"></div>
   <div style="color:var(--text2);font-size:12px;font-family:var(--font-mono);">Cargando datos...</div>
@@ -687,6 +722,19 @@ function init() {
       }
     });
   });
+
+  // Delete button delegation for dynamically rendered tables
+  document.addEventListener('click', function(e) {
+    const btnEnvio = e.target.closest('.del-envio');
+    if (btnEnvio) {
+      eliminarEnvio(btnEnvio.dataset.fid, btnEnvio.dataset.id);
+      return;
+    }
+    const btnDev = e.target.closest('.del-dev');
+    if (btnDev) {
+      eliminarDevolucion(btnDev.dataset.fid, btnDev.dataset.id);
+    }
+  });
 }
 
 function populateSelects() {
@@ -711,7 +759,7 @@ function populateSelect(id, items) {
 }
 
 
-let adminUnlocked = localStorage.getItem('shiptrack_admin') === '1';
+let adminUnlocked = false;
 let pendingAdminPage = null;
 let pendingAdminEl = null;
 
@@ -733,7 +781,6 @@ function checkAdminPass() {
   const val = document.getElementById('admin-pass-input').value;
   if (val === 'Cy1234') {
     adminUnlocked = true;
-    localStorage.setItem('shiptrack_admin', '1');
     closeAdminModal();
     if (pendingAdminPage) showPage(pendingAdminPage, pendingAdminEl);
   } else {
@@ -819,41 +866,27 @@ function limpiarForm() {
 function renderTabla() {
   const tbody = document.getElementById('tbody-envios');
   if (!state.envios.length) {
-    tbody.innerHTML = '<tr class="empty-row"><td colspan="12">Sin registros aún</td></tr>';
+    tbody.innerHTML = '<tr class="empty-row"><td colspan="11">Sin registros aún</td></tr>';
     return;
   }
-  const tm = { flex:'Flex', cobrar:'Por Cobrar', pagado:'Pagado' };
-  const tc = { flex:'tipo-flex', cobrar:'tipo-cobrar', pagado:'tipo-pagado' };
+  const tm = { flex:'Flex', cobrar:'Por Cobrar', pagado:'Pagado', acuerdo:'Acuerdo Entrega', cambio:'Cambio Producto' };
+  const tc = { flex:'tipo-flex', cobrar:'tipo-cobrar', pagado:'tipo-pagado', acuerdo:'tipo-acuerdo', cambio:'tipo-cambio' };
   const pm = { standard:'Standard', rural:'Rural' };
-  tbody.innerHTML = [...state.envios].reverse().map(e => {
-    const precioKey = (e.trans||'') + '|' + (e.tipoPaq||'');
-    const precioPaq = parseInt(state.precios[precioKey]) || 0;
-    const costoEnvio = (parseInt(e.cant)||0) * precioPaq;
-    const costoStr = costoEnvio > 0 ? '$'+costoEnvio.toLocaleString('es-CL') : '<span style="color:var(--text3)">—</span>';
-    const montoStr = e.monto != null ? '$'+e.monto.toLocaleString('es-CL') : '<span style="color:var(--text3)">—</span>';
-    const delId = e._id || e.id;
-    return `<tr>
+  tbody.innerHTML = [...state.envios].reverse().map(e => `
+    <tr>
       <td><strong style="color:var(--accent)">#${e.id}</strong></td>
       <td>${e.fecha}</td>
       <td>${e.trans}</td>
       <td>${e.emp}</td>
-      <td>${pm[e.tipoPaq]||e.tipoPaq}${precioPaq > 0 ? '<br><span style="color:var(--accent2);font-size:10px;">$'+precioPaq.toLocaleString('es-CL')+'</span>' : ''}</td>
+      <td>${pm[e.tipoPaq]||e.tipoPaq}</td>
       <td style="text-align:center">${e.cant}</td>
       <td><span class="tipo-indicator ${tc[e.tipoEnv]}">${tm[e.tipoEnv]}</span></td>
-      <td style="color:var(--accent2)">${costoStr}</td>
-      <td style="color:var(--success)">${montoStr}</td>
+      <td style="color:var(--success)">${e.monto != null ? '$'+e.monto.toLocaleString('es-CL') : '<span style="color:var(--text3)">—</span>'}</td>
       <td>${e.vendedor}</td>
       <td>${e.pago==='transferencia'?'🏦 Transferencia':'💵 Efectivo'}</td>
-      <td><button class="btn btn-danger btn-sm" style="padding:4px 8px;" data-del-id="${delId}">✕</button></td>
-    </tr>`;
-  }).join('');
-
-  // Event delegation for delete buttons
-  tbody.querySelectorAll('[data-del-id]').forEach(btn => {
-    btn.addEventListener('click', function() {
-      eliminarEnvio(this.getAttribute('data-del-id'));
-    });
-  });
+      <td><button class="btn btn-danger btn-sm del-envio" data-fid="${e._id||''}" data-id="${e.id||''}">✕ Eliminar</button></td>
+    </tr>
+  `).join('');
 }
 
 function initReporteFiltros() {
@@ -1229,11 +1262,10 @@ function renderTablaDev() {
     tbody.innerHTML = '<tr class="empty-row"><td colspan="11">Sin devoluciones registradas</td></tr>';
     return;
   }
-  const tm = { flex:'Flex', cobrar:'Por Cobrar', pagado:'Pagado' };
-  const tc = { flex:'tipo-flex', cobrar:'tipo-cobrar', pagado:'tipo-pagado' };
+  const tm = { flex:'Flex', cobrar:'Por Cobrar', pagado:'Pagado', acuerdo:'Acuerdo Entrega', cambio:'Cambio Producto' };
+  const tc = { flex:'tipo-flex', cobrar:'tipo-cobrar', pagado:'tipo-pagado', acuerdo:'tipo-acuerdo', cambio:'tipo-cambio' };
   const pm = { standard:'Standard', rural:'Rural' };
-  const tbodyDev = document.getElementById('tbody-devoluciones');
-  tbodyDev.innerHTML = [...state.devoluciones].reverse().map(e => `
+  tbody.innerHTML = [...state.devoluciones].reverse().map(e => `
     <tr>
       <td><strong style="color:var(--red)">#${e.id}</strong></td>
       <td>${e.fecha}</td>
@@ -1245,21 +1277,15 @@ function renderTablaDev() {
       <td style="color:var(--red)">${e.monto != null ? '- $'+e.monto.toLocaleString('es-CL') : '<span style="color:var(--text3)">—</span>'}</td>
       <td>${e.vendedor}</td>
       <td>${e.pago==='transferencia'?'🏦 Transferencia': e.pago==='efectivo'?'💵 Efectivo':'—'}</td>
-      <td><button class="btn btn-danger btn-sm" data-del-dev="${e._id||e.id}">✕</button></td>
+      <td><button class="btn btn-danger btn-sm del-dev" data-fid="${e._id||''}" data-id="${e.id||''}">✕ Eliminar</button></td>
     </tr>
   `).join('');
-
-  tbody.querySelectorAll('[data-del-dev]').forEach(btn => {
-    btn.addEventListener('click', function() {
-      eliminarDevolucion(this.getAttribute('data-del-dev'));
-    });
-  });
 }
 
 
 function exportarExcel() {
   const pm = { standard:'Standard', rural:'Rural' };
-  const tm = { flex:'Flex', cobrar:'Particular Por Cobrar', pagado:'Particular Pagado' };
+  const tm = { flex:'Flex', cobrar:'Particular Por Cobrar', pagado:'Particular Pagado', acuerdo:'Acuerdo de Entrega', cambio:'Cambio de Producto' };
   const headers = ['#','Fecha','Transportista','Empresa','Tipo Paquete','Cantidad','Tipo Envío','Monto','Vendedor','Tipo Pago'];
   const rows = state.envios.map(e => [
     e.id, e.fecha, e.trans, e.emp,
@@ -1405,28 +1431,81 @@ function renderComisiones() {
   tabla.innerHTML = html;
 }
 
-function eliminarDevolucion(id) {
-  if (!confirm('¿Eliminar esta devolución?')) return;
-  state.devoluciones = state.devoluciones.filter(e => String(e._id || e.id) !== String(id));
-  if (window.fbDeleteDevolucion) {
-    window.fbDeleteDevolucion(id).catch(() => showToast('⚠ Error al eliminar', true));
-  }
-  renderTablaDev();
-  renderReportes();
-  renderComisiones();
-  showToast('✓ Devolución eliminada');
+// ── Custom confirm modal (replaces browser confirm() which is blocked in iframes) ──
+let _confirmCallback = null;
+function showConfirm(msg, onConfirm) {
+  document.getElementById('confirm-msg').textContent = msg;
+  document.getElementById('confirm-modal').style.display = 'flex';
+  _confirmCallback = onConfirm;
+}
+function confirmOk() {
+  document.getElementById('confirm-modal').style.display = 'none';
+  if (_confirmCallback) { _confirmCallback(); _confirmCallback = null; }
+}
+function confirmCancel() {
+  document.getElementById('confirm-modal').style.display = 'none';
+  _confirmCallback = null;
 }
 
-function eliminarEnvio(id) {
-  if (!confirm('¿Eliminar este registro?')) return;
-  state.envios = state.envios.filter(e => String(e._id || e.id) !== String(id));
-  if (window.fbDeleteEnvio) {
-    window.fbDeleteEnvio(id).catch(() => showToast('⚠ Error al eliminar', true));
+function eliminarEnvio(firestoreId, fallbackId) {
+  showConfirm('¿Eliminar este envío? Esta acción no se puede deshacer.', () => {
+    showLoader(true);
+    const idx = state.envios.findIndex(e =>
+      (firestoreId && e._id === firestoreId) ||
+      (fallbackId  && String(e.id) === String(fallbackId))
+    );
+    if (idx !== -1) state.envios.splice(idx, 1);
+    renderTabla();
+    refreshAllViews();
+    const realId = firestoreId && firestoreId !== 'undefined' && firestoreId !== '' ? firestoreId : null;
+    if (realId && window.fbEliminarEnvio) {
+      window.fbEliminarEnvio(realId)
+        .then(() => { showLoader(false); showToast('✓ Envío eliminado'); })
+        .catch(() => { showLoader(false); showToast('⚠ Error al eliminar en base de datos', true); });
+    } else {
+      showLoader(false);
+      showToast('✓ Envío eliminado del historial');
+    }
+  });
+}
+
+function eliminarDevolucion(firestoreId, fallbackId) {
+  showConfirm('¿Eliminar esta devolución? Esta acción no se puede deshacer.', () => {
+    showLoader(true);
+    const idx = state.devoluciones.findIndex(e =>
+      (firestoreId && e._id === firestoreId) ||
+      (fallbackId  && String(e.id) === String(fallbackId))
+    );
+    if (idx !== -1) state.devoluciones.splice(idx, 1);
+    renderTablaDev();
+    refreshAllViews();
+    const realId = firestoreId && firestoreId !== 'undefined' && firestoreId !== '' ? firestoreId : null;
+    if (realId && window.fbEliminarDevolucion) {
+      window.fbEliminarDevolucion(realId)
+        .then(() => { showLoader(false); showToast('✓ Devolución eliminada'); })
+        .catch(() => { showLoader(false); showToast('⚠ Error al eliminar en base de datos', true); });
+    } else {
+      showLoader(false);
+      showToast('✓ Devolución eliminada del historial');
+    }
+  });
+}
+
+function refreshAllViews() {
+  // Re-render any visible page that depends on envios/devoluciones data
+  const activePage = document.querySelector('.page.active');
+  if (!activePage) return;
+  const id = activePage.id;
+  if (id === 'page-reportes') renderReportes();
+  if (id === 'page-comisiones') renderComisiones();
+  if (id === 'page-historial') renderTabla();
+  if (id === 'page-devoluciones') renderTablaDev();
+  // Always silently refresh reportes data so next visit is up to date
+  if (id !== 'page-reportes') {
+    // refresh internal data only (don't touch DOM of other pages)
+    // — renderReportes checks its own page elements so safe to call anytime
+    renderReportes();
   }
-  renderTabla();
-  renderReportes();
-  renderComisiones();
-  showToast('✓ Registro eliminado');
 }
 
 function showLoader(show) {
