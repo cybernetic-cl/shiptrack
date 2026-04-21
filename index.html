@@ -312,7 +312,6 @@
   }
   window.fbEcAdd = async function(col, stateKey, nombre) {
     const ref = await addDoc(collection(db, col), { nombre });
-    state[stateKey].push(nombre);
     state._ids[stateKey][nombre] = ref.id;
   };
   window.fbEcRemove = async function(col, stateKey, nombre) {
@@ -1933,7 +1932,7 @@ function ecAddItem(stateKey, inputId, containerId) {
   const el = document.getElementById(inputId);
   const nombre = el.value.trim();
   if (!nombre) return showToast('⚠ Escribe un nombre', true);
-  if ((state[stateKey]||[]).includes(nombre)) return showToast('⚠ Ya existe', true);
+  if ((state[stateKey]||[]).some(x => x.toLowerCase() === nombre.toLowerCase())) return showToast('⚠ Ya existe: ' + nombre, true);
   const colMap = { ecTransportistas:'ecTransportistas', ecEmpresas:'ecEmpresas', ecCanales:'ecCanales', ecEstados:'ecEstados' };
   if (!state[stateKey]) state[stateKey] = [];
   state[stateKey].push(nombre);
