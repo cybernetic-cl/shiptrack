@@ -216,23 +216,6 @@
       await loadEcCollection('ecCanales', 'ecCanales');
       await loadEcCollection('ecEstados', 'ecEstados');
 
-      // Seed default canales and estados if empty
-      const defaultCanales = ['MercadoLibre','Falabella','Ripley','Shopify','WooCommerce','Otro'];
-      const defaultEstados = ['Pendiente','Despachado','Entregado','Devuelto'];
-      for (const nombre of defaultCanales) {
-        if (!state.ecCanales.includes(nombre)) {
-          const ref = await addDoc(collection(db, 'ecCanales'), { nombre });
-          state.ecCanales.push(nombre);
-          state._ids.ecCanales[nombre] = ref.id;
-        }
-      }
-      for (const nombre of defaultEstados) {
-        if (!state.ecEstados.includes(nombre)) {
-          const ref = await addDoc(collection(db, 'ecEstados'), { nombre });
-          state.ecEstados.push(nombre);
-          state._ids.ecEstados[nombre] = ref.id;
-        }
-      }
 
       // ── Seed default data if not present ──
       const seedTransportistas = ["Fast Way"];
