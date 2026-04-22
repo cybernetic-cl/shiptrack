@@ -1072,6 +1072,13 @@ function populateTipoEnvioSelects() {
 }
 
 
+const ADMIN_HASH = '0e1db2979be2947b6ac7ac3f6275a70c346c49ff3593eff7b2a8dbf0210b7d4f'; // SHA-256 de la contraseña de admin
+
+async function hashPassword(pass) {
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(pass));
+  return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2,'0')).join('');
+}
+
 let adminUnlocked = false;
 let pendingAdminPage = null;
 let pendingAdminEl = null;
@@ -1092,21 +1099,23 @@ function requireAdmin(id, el) {
 
 function checkAdminPass() {
   const val = document.getElementById('admin-pass-input').value;
-  if (val === 'Cy1234') {
-    adminUnlocked = true;
-    closeAdminModal();
-    if (pendingAdminPage && pendingAdminPage.startsWith('__tab__')) {
-      const tab = pendingAdminPage.replace('__tab__', '');
-      pendingAdminPage = null;
-      switchEcTab(tab);
-    } else if (pendingAdminPage) {
-      showPage(pendingAdminPage, pendingAdminEl);
+  hashPassword(val).then(hash => {
+    if (hash === ADMIN_HASH) {
+      adminUnlocked = true;
+      closeAdminModal();
+      if (pendingAdminPage && pendingAdminPage.startsWith('__tab__')) {
+        const tab = pendingAdminPage.replace('__tab__', '');
+        pendingAdminPage = null;
+        switchEcTab(tab);
+      } else if (pendingAdminPage) {
+        showPage(pendingAdminPage, pendingAdminEl);
+      }
+    } else {
+      document.getElementById('admin-pass-error').style.display = 'block';
+      document.getElementById('admin-pass-input').value = '';
+      setTimeout(() => document.getElementById('admin-pass-input').focus(), 50);
     }
-  } else {
-    document.getElementById('admin-pass-error').style.display = 'block';
-    document.getElementById('admin-pass-input').value = '';
-    document.getElementById('admin-pass-input').focus();
-  }
+  }); // end hashPassword.then
 }
 
 function closeAdminModal() {
