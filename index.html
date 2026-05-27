@@ -68,8 +68,10 @@
   .btn-primary:hover { background: #3d7be0; transform: translateY(-1px); box-shadow: 0 4px 16px rgba(79,142,247,0.3); }
   .btn-secondary { background: var(--surface2); color: var(--text2); border: 1px solid var(--border); }
   .btn-secondary:hover { color: var(--text); border-color: var(--text3); }
-  .btn-danger { background: rgba(247,79,106,0.12); color: var(--red); border: 1px solid rgba(247,79,106,0.25); }
-  .btn-danger:hover { background: rgba(247,79,106,0.2); }
+  .btn-danger { background: rgba(247,79,106,0.12); color: var(--red); border: 1px solid rgba(247,79,106,0.35); }
+  .btn-danger:hover { background: rgba(247,79,106,0.28); border-color: var(--red); color: #fff; transform: translateY(-1px); box-shadow: 0 3px 10px rgba(247,79,106,0.25); }
+  .btn-icon-danger { display:inline-flex; align-items:center; justify-content:center; width:28px; height:28px; border-radius:6px; border:1px solid rgba(247,79,106,0.35); background:rgba(247,79,106,0.1); color:var(--red); cursor:pointer; font-size:13px; transition:all 0.15s; line-height:1; font-family:var(--font-mono); }
+  .btn-icon-danger:hover { background:rgba(247,79,106,0.28); border-color:var(--red); color:#fff; transform:translateY(-1px); box-shadow:0 3px 10px rgba(247,79,106,0.25); }
   .btn-sm { padding: 6px 12px; font-size: 11px; }
   .btn-row { display: flex; gap: 10px; align-items: center; margin-top: 24px; flex-wrap: wrap; }
 
@@ -507,7 +509,20 @@
       <div class="tab-panel active" id="hist-tab-envios">
         <div class="card">
           <div class="card-title">⬡ Envíos registrados</div>
-          <div style="display:flex;justify-content:flex-end;margin-bottom:12px;">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:10px;">
+            <div style="display:flex;align-items:center;gap:8px;">
+              <select id="hist-mes" onchange="renderTabla()" style="width:125px;padding:7px 10px;font-size:12px;">
+                <option value="0">Todos los meses</option>
+                <option value="1">Enero</option><option value="2">Febrero</option>
+                <option value="3">Marzo</option><option value="4">Abril</option>
+                <option value="5">Mayo</option><option value="6">Junio</option>
+                <option value="7">Julio</option><option value="8">Agosto</option>
+                <option value="9">Septiembre</option><option value="10">Octubre</option>
+                <option value="11">Noviembre</option><option value="12">Diciembre</option>
+              </select>
+              <select id="hist-anio" onchange="renderTabla()" style="width:85px;padding:7px 10px;font-size:12px;"></select>
+              <span id="hist-count" style="font-size:11px;color:var(--text3);white-space:nowrap;"></span>
+            </div>
             <button class="btn btn-secondary btn-sm" onclick="exportarExcel()">⬇ Descargar Excel</button>
           </div>
           <div class="table-wrap">
@@ -1195,16 +1210,45 @@ function limpiarForm() {
 
 }
 
+function initHistFiltros() {
+  const selAnio = document.getElementById('hist-anio');
+  if (!selAnio || selAnio.options.length > 0) return;
+  const now = new Date();
+  for (let y = 2030; y >= 2020; y--) {
+    const o = document.createElement('option');
+    o.value = y; o.textContent = y;
+    selAnio.appendChild(o);
+  }
+  selAnio.value = now.getFullYear();
+  document.getElementById('hist-mes').value = now.getMonth() + 1;
+}
+
 function renderTabla() {
+  initHistFiltros();
   const tbody = document.getElementById('tbody-envios');
-  if (!state.envios.length) {
-    tbody.innerHTML = '<tr class="empty-row"><td colspan="11">Sin registros aún</td></tr>';
+  const mesEl = document.getElementById('hist-mes');
+  const anioEl = document.getElementById('hist-anio');
+  const mesF = mesEl ? parseInt(mesEl.value) : 0;
+  const anioF = anioEl ? parseInt(anioEl.value) : 0;
+
+  const filtrar = e => {
+    if (!mesF) return true;
+    const d = new Date(e.fecha + 'T00:00:00');
+    return d.getMonth()+1 === mesF && d.getFullYear() === anioF;
+  };
+
+  const filtered = [...state.envios].filter(filtrar).sort((a,b) => new Date(b.fecha) - new Date(a.fecha));
+  const countEl = document.getElementById('hist-count');
+  if (countEl) countEl.textContent = filtered.length ? filtered.length + ' registro' + (filtered.length !== 1 ? 's' : '') : '';
+
+  if (!filtered.length) {
+    tbody.innerHTML = '<tr class="empty-row"><td colspan="11">' + (state.envios.length ? 'Sin registros para este período' : 'Sin registros aún') + '</td></tr>';
     return;
   }
   const tm = { flex:'Flex', cobrar:'Por Cobrar', pagado:'Pagado', acuerdo:'Acuerdo Entrega', cambio:'Cambio Producto' };
   const tc = { flex:'tipo-flex', cobrar:'tipo-cobrar', pagado:'tipo-pagado', acuerdo:'tipo-acuerdo', cambio:'tipo-cambio' };
   const pm = { standard:'Standard', rural:'Rural' };
-  tbody.innerHTML = [...state.envios].reverse().map(e => `
+  tbody.innerHTML = filtered.map(e => `
     <tr>
       <td><strong style="color:var(--accent)">#${e.id}</strong></td>
       <td>${e.fecha}</td>
@@ -1216,7 +1260,7 @@ function renderTabla() {
       <td style="color:var(--success)">${e.monto != null ? '$'+e.monto.toLocaleString('es-CL') : '<span style="color:var(--text3)">—</span>'}</td>
       <td>${e.vendedor}</td>
       <td>${e.pago==='transferencia'?'🏦 Transferencia':'💵 Efectivo'}</td>
-      <td><button class="btn btn-danger btn-sm del-envio" data-fid="${e._id||''}" data-id="${e.id||''}">✕ Eliminar</button></td>
+      <td style="text-align:center"><button class="btn-icon-danger del-envio" data-fid="${e._id||''}" data-id="${e.id||''}" title="Eliminar">✕</button></td>
     </tr>
   `).join('');
 }
@@ -1821,7 +1865,7 @@ function renderTablaDev() {
   const tm = { flex:'Flex', cobrar:'Por Cobrar', pagado:'Pagado', acuerdo:'Acuerdo Entrega', cambio:'Cambio Producto' };
   const tc = { flex:'tipo-flex', cobrar:'tipo-cobrar', pagado:'tipo-pagado', acuerdo:'tipo-acuerdo', cambio:'tipo-cambio' };
   const pm = { standard:'Standard', rural:'Rural' };
-  tbody.innerHTML = [...state.devoluciones].reverse().map(e => `
+  tbody.innerHTML = [...state.devoluciones].sort((a,b) => new Date(b.fecha) - new Date(a.fecha)).map(e => `
     <tr>
       <td><strong style="color:var(--red)">#${e.id}</strong></td>
       <td>${e.fecha}</td>
@@ -1833,7 +1877,7 @@ function renderTablaDev() {
       <td style="color:var(--red)">${e.monto != null ? '- $'+e.monto.toLocaleString('es-CL') : '<span style="color:var(--text3)">—</span>'}</td>
       <td>${e.vendedor}</td>
       <td>${e.pago==='transferencia'?'🏦 Transferencia': e.pago==='efectivo'?'💵 Efectivo':'—'}</td>
-      <td><button class="btn btn-danger btn-sm del-dev" data-fid="${e._id||''}" data-id="${e.id||''}">✕ Eliminar</button></td>
+      <td style="text-align:center"><button class="btn-icon-danger del-dev" data-fid="${e._id||''}" data-id="${e.id||''}" title="Eliminar">✕</button></td>
     </tr>
   `).join('');
 }
@@ -1842,8 +1886,14 @@ function renderTablaDev() {
 function exportarExcel() {
   const pm = { standard:'Standard', rural:'Rural' };
   const tm = { flex:'Flex', cobrar:'Particular Por Cobrar', pagado:'Particular Pagado', acuerdo:'Acuerdo de Entrega', cambio:'Cambio de Producto' };
+  const mesEl = document.getElementById('hist-mes');
+  const anioEl = document.getElementById('hist-anio');
+  const mesF = mesEl ? parseInt(mesEl.value) : 0;
+  const anioF = anioEl ? parseInt(anioEl.value) : 0;
+  const filtrar = e => { if (!mesF) return true; const d = new Date(e.fecha + 'T00:00:00'); return d.getMonth()+1 === mesF && d.getFullYear() === anioF; };
+  const enviosFiltrados = [...state.envios].filter(filtrar).sort((a,b) => new Date(b.fecha) - new Date(a.fecha));
   const headers = ['#','Fecha','Transportista','Empresa','Tipo Paquete','Cantidad','Tipo Envío','Monto','Vendedor','Tipo Pago'];
-  const rows = state.envios.map(e => [
+  const rows = enviosFiltrados.map(e => [
     e.id, e.fecha, e.trans, e.emp,
     pm[e.tipoPaq]||e.tipoPaq, e.cant,
     tm[e.tipoEnv]||e.tipoEnv,
@@ -2162,7 +2212,7 @@ function renderTablaEc2() {
   }
   const canalLabel = { mercadolibre:'MercadoLibre', falabella:'Falabella', ripley:'Ripley', shopify:'Shopify', woocommerce:'WooCommerce', otro:'Otro' };
   const estadoColor = { pendiente:'var(--text3)', despachado:'var(--accent)', entregado:'var(--success)', devuelto:'var(--red)' };
-  tbody.innerHTML = [...state.ecommerce].reverse().map(e => `
+  tbody.innerHTML = [...state.ecommerce].sort((a,b) => new Date(b.fecha) - new Date(a.fecha)).map(e => `
     <tr>
       <td><strong style="color:var(--success)">#${e.id ? String(e.id).slice(-4) : '—'}</strong></td>
       <td>${e.fecha}</td>
@@ -2171,7 +2221,7 @@ function renderTablaEc2() {
       <td style="text-align:center">${e.cant}</td>
       <td>${canalLabel[e.canal]||e.canal||'—'}</td>
       <td><span style="color:${estadoColor[e.estado]||'var(--text2)'};text-transform:capitalize;">${e.estado||'—'}</span></td>
-      <td><button class="btn btn-danger btn-sm del-ec" data-fid="${e._id||''}" data-id="${e.id||''}">✕ Eliminar</button></td>
+      <td><button class="btn-icon-danger del-ec" data-fid="${e._id||''}" data-id="${e.id||''}" title="Eliminar">✕</button></td>
     </tr>
   `).join('');
 }
@@ -2244,7 +2294,7 @@ function renderTablaEc() {
   const pm = { standard:'Standard', rural:'Rural' };
   const canalLabel = { mercadolibre:'MercadoLibre', falabella:'Falabella', ripley:'Ripley', shopify:'Shopify', woocommerce:'WooCommerce', otro:'Otro' };
   const estadoColor = { pendiente:'var(--text3)', despachado:'var(--accent)', entregado:'var(--success)', devuelto:'var(--red)' };
-  tbody.innerHTML = [...state.ecommerce].reverse().map(e => `
+  tbody.innerHTML = [...state.ecommerce].sort((a,b) => new Date(b.fecha) - new Date(a.fecha)).map(e => `
     <tr>
       <td><strong style="color:var(--success)">#${e.id ? String(e.id).slice(-4) : '—'}</strong></td>
       <td>${e.fecha}</td>
@@ -2253,7 +2303,7 @@ function renderTablaEc() {
       <td style="text-align:center">${e.cant}</td>
       <td>${e.canal||'—'}</td>
       <td><span style="color:${estadoColor[e.estado]||'var(--text2)'};text-transform:capitalize;">${e.estado||'—'}</span></td>
-      <td><button class="btn btn-danger btn-sm del-ec" data-fid="${e._id||''}" data-id="${e.id||''}">✕ Eliminar</button></td>
+      <td><button class="btn-icon-danger del-ec" data-fid="${e._id||''}" data-id="${e.id||''}" title="Eliminar">✕</button></td>
     </tr>
   `).join('');
 }
