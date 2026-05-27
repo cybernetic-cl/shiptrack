@@ -1121,20 +1121,22 @@ function checkAdminPass() {
   hashPassword(val).then(hash => {
     if (hash === ADMIN_HASH) {
       adminUnlocked = true;
-      closeAdminModal();
-      if (pendingAdminPage && pendingAdminPage.startsWith('__tab__')) {
-        const tab = pendingAdminPage.replace('__tab__', '');
-        pendingAdminPage = null;
-        switchEcTab(tab);
-      } else if (pendingAdminPage) {
-        showPage(pendingAdminPage, pendingAdminEl);
+      const page = pendingAdminPage;
+      const el = pendingAdminEl;
+      document.getElementById('admin-modal').style.display = 'none';
+      pendingAdminPage = null;
+      pendingAdminEl = null;
+      if (page && page.startsWith('__tab__')) {
+        switchEcTab(page.replace('__tab__', ''));
+      } else if (page) {
+        showPage(page, el);
       }
     } else {
       document.getElementById('admin-pass-error').style.display = 'block';
       document.getElementById('admin-pass-input').value = '';
       setTimeout(() => document.getElementById('admin-pass-input').focus(), 50);
     }
-  }); // end hashPassword.then
+  });
 }
 
 function closeAdminModal() {
@@ -1185,17 +1187,20 @@ function guardarEnvio() {
     tipoPaq: f('f-tipo-paquete'), cant: parseInt(f('f-cantidad')),
     tipoEnv: tipoEnv, monto: f('f-monto') ? parseInt(f('f-monto')) : null,
     vendedor: f('f-vendedor') || '—', pago: f('f-tipo-pago') || '—',
+    createdAt: Date.now(),
   };
   if (window.fbGuardarEnvio) {
     showLoader(true);
     window.fbGuardarEnvio(envio).then(() => {
       showLoader(false);
       limpiarForm();
+      renderTabla();
       showToast('✓ Envío registrado');
     }).catch(() => { showLoader(false); showToast('⚠ Error al guardar', true); });
   } else {
     state.envios.push(envio);
     limpiarForm();
+    renderTabla();
     showToast('✓ Envío registrado');
   }
 }
@@ -1237,7 +1242,12 @@ function renderTabla() {
     return d.getMonth()+1 === mesF && d.getFullYear() === anioF;
   };
 
-  const filtered = [...state.envios].filter(filtrar).sort((a,b) => new Date(b.fecha) - new Date(a.fecha));
+  const filtered = [...state.envios].filter(filtrar).sort((a,b) => {
+    const dateDiff = new Date(b.fecha) - new Date(a.fecha);
+    if (dateDiff !== 0) return dateDiff;
+    // Same date: use createdAt timestamp or array position as tiebreaker
+    return (b.createdAt || 0) - (a.createdAt || 0);
+  });
   const countEl = document.getElementById('hist-count');
   if (countEl) countEl.textContent = filtered.length ? filtered.length + ' registro' + (filtered.length !== 1 ? 's' : '') : '';
 
