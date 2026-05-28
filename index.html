@@ -4,20 +4,29 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>ShipTrack — Control de Envíos</title>
+<link rel="icon" type="image/png" href="favicon-32x32.png" sizes="32x32">
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
 <style>
   :root {
+    /* Light mode (default) */
+    --bg: #f4f6fb; --surface: #ffffff; --surface2: #edf0f7; --border: #d6dce8;
+    --accent: #3a7ef5; --accent2: #e8842a; --success: #27a85e; --text: #1a1f2e;
+    --text2: #4a5470; --text3: #9099b3; --red: #e03050; --input-bg: #f9fafc;
+    --radius: 10px; --font-head: 'Syne', sans-serif; --font-mono: 'DM Mono', monospace;
+    --shadow: 0 1px 4px rgba(0,0,0,0.07); --toggle-bg: #e2e6f0;
+  }
+  [data-theme=dark] {
     --bg: #0f1117; --surface: #181c27; --surface2: #1f2438; --border: #2a3050;
     --accent: #4f8ef7; --accent2: #f7924f; --success: #4fca7a; --text: #e8ecf5;
     --text2: #8892b0; --text3: #4a5568; --red: #f74f6a; --input-bg: #131729;
-    --radius: 10px; --font-head: 'Syne', sans-serif; --font-mono: 'DM Mono', monospace;
+    --shadow: 0 1px 4px rgba(0,0,0,0.3); --toggle-bg: #2a3050;
   }
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body { background: var(--bg); color: var(--text); font-family: var(--font-mono); min-height: 100vh; font-size: 13px; }
   .app { display: flex; min-height: 100vh; }
 
   /* SIDEBAR */
-  .sidebar { width: 220px; min-width: 220px; background: var(--surface); border-right: 1px solid var(--border); display: flex; flex-direction: column; padding: 24px 0; position: sticky; top: 0; height: 100vh; }
+  .sidebar { width: 220px; min-width: 220px; background: var(--surface); border-right: 1px solid var(--border); box-shadow: var(--shadow); display: flex; flex-direction: column; padding: 24px 0; position: sticky; top: 0; height: 100vh; }
   .logo { padding: 0 20px 24px; border-bottom: 1px solid var(--border); margin-bottom: 16px; }
   .logo-text { font-family: var(--font-head); font-size: 18px; font-weight: 800; color: var(--text); letter-spacing: -0.5px; }
   .logo-sub { font-size: 10px; color: var(--text3); letter-spacing: 2px; text-transform: uppercase; margin-top: 2px; }
@@ -36,7 +45,7 @@
   .page-subtitle { color: var(--text3); font-size: 11px; margin-top: 4px; letter-spacing: 1px; }
 
   /* CARDS */
-  .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 24px; margin-bottom: 20px; }
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 24px; margin-bottom: 20px; box-shadow: var(--shadow); }
   .card-title { font-family: var(--font-head); font-size: 13px; font-weight: 700; color: var(--text2); letter-spacing: 1px; text-transform: uppercase; margin-bottom: 20px; padding-bottom: 12px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 8px; }
 
   /* FORM */
@@ -51,7 +60,7 @@
   input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
   input[type=number] { -moz-appearance: textfield; }
   select { cursor: pointer; }
-  select option { background: var(--surface2); }
+  select option { background: var(--surface2); color: var(--text); }
 
   /* CONDITIONAL */
   .conditional-section { overflow: hidden; max-height: 0; opacity: 0; transition: max-height 0.35s ease, opacity 0.3s ease, margin 0.3s ease; margin-top: 0; }
@@ -80,12 +89,13 @@
   table { width: 100%; border-collapse: collapse; }
   th { background: var(--surface2); color: var(--text3); font-size: 10px; letter-spacing: 1.5px; text-transform: uppercase; padding: 10px 14px; text-align: left; border-bottom: 1px solid var(--border); }
   td { padding: 11px 14px; border-bottom: 1px solid var(--border); color: var(--text2); font-size: 12px; vertical-align: middle; }
-  tr:hover td { background: rgba(255,255,255,0.02); color: var(--text); }
+  tr:hover td { background: rgba(0,0,0,0.02); color: var(--text); }
+  [data-theme=dark] tr:hover td { background: rgba(255,255,255,0.02); }
   .empty-row td { text-align: center; color: var(--text3); padding: 32px; font-style: italic; }
 
   /* STATS */
   .stats-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 14px; margin-bottom: 24px; }
-  .stat-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 18px 20px; position: relative; overflow: hidden; }
+  .stat-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 18px 20px; position: relative; overflow: hidden; box-shadow: var(--shadow); }
   .stat-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px; }
   .stat-card.blue::before { background: var(--accent); }
   .stat-card.orange::before { background: var(--accent2); }
@@ -112,7 +122,7 @@
   .precio-auto { display: flex; align-items: center; gap: 6px; padding: 8px 12px; background: rgba(79,202,122,0.08); border: 1px solid rgba(79,202,122,0.2); border-radius: 6px; color: var(--success); font-size: 12px; }
 
   /* TOAST */
-  .toast { position: fixed; bottom: 24px; right: 24px; background: var(--surface2); border: 1px solid var(--success); border-radius: 8px; padding: 12px 20px; color: var(--success); font-size: 12px; display: flex; align-items: center; gap: 8px; transform: translateY(80px); opacity: 0; transition: all 0.3s ease; z-index: 100; box-shadow: 0 8px 32px rgba(0,0,0,0.4); }
+  .toast { position: fixed; bottom: 24px; right: 24px; background: var(--surface); border: 1px solid var(--success); border-radius: 8px; padding: 12px 20px; color: var(--success); font-size: 12px; display: flex; align-items: center; gap: 8px; transform: translateY(80px); opacity: 0; transition: all 0.3s ease; z-index: 100; box-shadow: 0 8px 32px rgba(0,0,0,0.4); }
   .toast.show { transform: translateY(0); opacity: 1; }
   .divider { height: 1px; background: var(--border); margin: 20px 0; }
 
@@ -131,6 +141,15 @@
   .checkbox-box { width:16px; height:16px; border:2px solid var(--border); border-radius:4px; background:var(--input-bg); flex-shrink:0; display:flex; align-items:center; justify-content:center; transition:all .15s; }
   .styled-checkbox:checked + .checkbox-box { background:var(--accent); border-color:var(--accent); }
   .styled-checkbox:checked + .checkbox-box::after { content:""; width:4px; height:8px; border:2px solid #fff; border-top:none; border-left:none; transform:rotate(45deg) translateY(-1px); display:block; }
+
+
+  /* THEME TOGGLE */
+  .theme-toggle { display:flex; align-items:center; gap:8px; padding:10px 20px; margin-top:auto; cursor:pointer; color:var(--text3); font-size:11px; letter-spacing:1px; transition:color .15s; }
+  .theme-toggle:hover { color:var(--text); }
+  .toggle-track { width:36px; height:20px; background:var(--toggle-bg); border-radius:10px; position:relative; transition:background .2s; flex-shrink:0; border:1px solid var(--border); }
+  .toggle-thumb { width:14px; height:14px; background:var(--accent); border-radius:50%; position:absolute; top:2px; left:2px; transition:transform .2s; }
+  [data-theme=dark] .toggle-thumb { transform:translateX(16px); }
+  [data-theme=dark] .toggle-track { background:rgba(79,142,247,0.2); }
 
   ::-webkit-scrollbar { width: 5px; height: 5px; }
   ::-webkit-scrollbar-track { background: transparent; }
@@ -414,6 +433,11 @@
     <div class="nav-item" data-page="admin">
       <span class="icon">⚙</span> Panel Admin
     </div>
+    <div style="flex:1"></div>
+    <button class="theme-toggle" onclick="toggleTheme()" id="theme-btn" title="Cambiar tema">
+      <div class="toggle-track"><div class="toggle-thumb"></div></div>
+      <span id="theme-label">Modo oscuro</span>
+    </button>
   </nav>
 
   <main class="main">
@@ -2464,6 +2488,23 @@ function showToast(msg, isError=false) {
 }
 
 init();
+
+// ── THEME TOGGLE ──
+function applyTheme(dark) {
+  document.documentElement.setAttribute('data-theme', dark ? 'dark' : 'light');
+  const label = document.getElementById('theme-label');
+  if (label) label.textContent = dark ? 'Modo claro' : 'Modo oscuro';
+  localStorage.setItem('shiptrack-theme', dark ? 'dark' : 'light');
+}
+function toggleTheme() {
+  const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+  applyTheme(!isDark);
+}
+// Apply saved theme or default light
+(function() {
+  const saved = localStorage.getItem('shiptrack-theme');
+  applyTheme(saved === 'dark');
+})();
 </script>
 </body>
 </html>
