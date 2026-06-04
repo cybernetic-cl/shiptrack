@@ -6,6 +6,7 @@
 <title>ShipTrack — Control de Envíos</title>
 <link rel="icon" type="image/png" href="favicon-32x32.png" sizes="32x32">
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 <style>
   :root {
     /* Light mode (default) */
@@ -468,21 +469,22 @@
             <select id="f-empresa"><option value="">— Seleccionar —</option></select>
           </div>
           <div class="field">
-            <label>Tipo de paquete <span class="req">*</span></label>
-            <select id="f-tipo-paquete" onchange="updateTipoPaquete()">
-              <option value="">— Seleccionar —</option>
-            </select>
-          </div>
-          <div class="field">
-            <label>Cantidad de paquetes <span class="req">*</span></label>
-            <input type="number" id="f-cantidad" min="1" placeholder="0">
-          </div>
-          <div class="field">
             <label>Tipo de envío <span class="req">*</span></label>
             <select id="f-tipo-envio" onchange="toggleTipoEnvio()">
               <option value="">— Seleccionar —</option>
             </select>
-            </select>
+          </div>
+          <div class="field">
+            <label>Cantidad Standard</label>
+            <input type="number" id="f-cant-std" min="0" placeholder="0" oninput="updateTotalPaq()">
+          </div>
+          <div class="field">
+            <label>Cantidad Rural</label>
+            <input type="number" id="f-cant-rural" min="0" placeholder="0" oninput="updateTotalPaq()">
+          </div>
+          <div class="field">
+            <label>Total paquetes</label>
+            <input type="number" id="f-cant-total" placeholder="0" readonly style="background:var(--surface2);font-weight:700;">
           </div>
         </div>
 
@@ -513,6 +515,21 @@
           <button class="btn btn-primary" onclick="guardarEnvio()">✚ Registrar envío</button>
           <button class="btn btn-secondary" onclick="limpiarForm()">↺ Limpiar</button>
         </div>
+      </div>
+
+      <!-- PRECARGA DESDE ARCHIVO -->
+      <div class="card" id="precarga-card">
+        <div class="card-title">📥 Precargar datos · MercadoEnvíos Flex</div>
+        <p style="font-size:12px;color:var(--text3);margin:-4px 0 12px;line-height:1.5;">
+          Adjunta el archivo de etiquetas (<b>.zip</b> o <b>.txt</b>) y se autocompletan empresa, cantidades y tipo de envío.
+        </p>
+        <div class="form-grid">
+          <div class="field" style="grid-column:1/-1;">
+            <label>Archivo de etiquetas</label>
+            <input type="file" id="f-precarga" accept=".zip,.txt" onchange="precargarEnvios(this)">
+          </div>
+        </div>
+        <div id="precarga-resumen" style="display:none;"></div>
       </div>
     </div>
 
@@ -1196,47 +1213,223 @@ function updateTipoPaquete() {}
 
 function updatePrecioRef() {}
 
+function updateTotalPaq() {
+  const std = parseInt(document.getElementById('f-cant-std').value) || 0;
+  const rural = parseInt(document.getElementById('f-cant-rural').value) || 0;
+  document.getElementById('f-cant-total').value = (std + rural) || '';
+}
+
 function guardarEnvio() {
   const f = id => document.getElementById(id).value;
-  if (!f('f-fecha') || !f('f-transportista') || !f('f-empresa') || !f('f-tipo-paquete') || !f('f-cantidad') || !f('f-tipo-envio')) {
+  const cantStd = parseInt(f('f-cant-std')) || 0;
+  const cantRural = parseInt(f('f-cant-rural')) || 0;
+
+  if (!f('f-fecha') || !f('f-transportista') || !f('f-empresa') || !f('f-tipo-envio')) {
     return showToast('⚠ Completa todos los campos obligatorios', true);
+  }
+  if (cantStd <= 0 && cantRural <= 0) {
+    return showToast('⚠ Ingresa al menos una cantidad (Standard o Rural)', true);
   }
   const tipoEnv = f('f-tipo-envio');
   if (tieneConMonto(tipoEnv) && (!f('f-monto') || !f('f-vendedor') || !f('f-tipo-pago'))) {
     return showToast('⚠ Completa monto, vendedor y tipo de pago', true);
   }
-  const envio = {
-    id: state.envios.length + 1,
+
+  // Construye un registro separado por cada tipo de paquete con cantidad > 0
+  const base = {
     fecha: f('f-fecha'), trans: f('f-transportista'), emp: f('f-empresa'),
-    tipoPaq: f('f-tipo-paquete'), cant: parseInt(f('f-cantidad')),
     tipoEnv: tipoEnv, monto: f('f-monto') ? parseInt(f('f-monto')) : null,
     vendedor: f('f-vendedor') || '—', pago: f('f-tipo-pago') || '—',
-    createdAt: Date.now(),
   };
+  const registros = [];
+  if (cantStd > 0)   registros.push({ ...base, tipoPaq: 'standard', cant: cantStd, createdAt: Date.now() });
+  if (cantRural > 0) registros.push({ ...base, tipoPaq: 'rural',    cant: cantRural, createdAt: Date.now() + 1 });
+
+  const okMsg = '✓ ' + registros.length + (registros.length === 1 ? ' envío registrado' : ' envíos registrados (Standard + Rural)');
+
   if (window.fbGuardarEnvio) {
     showLoader(true);
-    window.fbGuardarEnvio(envio).then(() => {
+    Promise.all(registros.map(r => window.fbGuardarEnvio(r))).then(() => {
       showLoader(false);
       limpiarForm();
       renderTabla();
-      showToast('✓ Envío registrado');
+      showToast(okMsg);
     }).catch(() => { showLoader(false); showToast('⚠ Error al guardar', true); });
   } else {
-    state.envios.push(envio);
+    registros.forEach(r => { r.id = state.envios.length + 1; state.envios.push(r); });
     limpiarForm();
     renderTabla();
-    showToast('✓ Envío registrado');
+    showToast(okMsg);
   }
 }
 
 function limpiarForm() {
   document.getElementById('f-fecha').value = new Date().toISOString().split('T')[0];
   document.getElementById('d-fecha').value = new Date().toISOString().split('T')[0];
-  ['f-transportista','f-empresa','f-tipo-paquete','f-cantidad','f-tipo-envio',
+  ['f-transportista','f-empresa','f-cant-std','f-cant-rural','f-cant-total','f-tipo-envio',
    'f-monto','f-vendedor','f-tipo-pago']
-    .forEach(id => { document.getElementById(id).value = ''; });
+    .forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
   document.getElementById('section-pago').classList.remove('visible');
+  const pf = document.getElementById('f-precarga'); if (pf) pf.value = '';
+  const pr = document.getElementById('precarga-resumen'); if (pr) { pr.style.display = 'none'; pr.innerHTML = ''; }
+}
 
+// ── PRECARGA DESDE ARCHIVO DE ETIQUETAS (ZPL / MercadoEnvíos) ──
+
+// Mapa de cuentas MercadoEnvíos (sender_id) -> empresa registrada en la app.
+// Para agregar una nueva cuenta, añade aquí su número de remitente.
+const REMITENTE_EMPRESA = {
+  '651703010': 'Cybernetic',
+  '688204963': 'Mascokits',
+};
+
+function decodeZpl(s) {
+  // Decodifica escapes hex tipo _C3_AD (UTF-8) usados con ^FH
+  return s.replace(/(?:_[0-9A-Fa-f]{2})+/g, m => {
+    try { return decodeURIComponent(m.replace(/_/g, '%')); }
+    catch (e) { return m; }
+  });
+}
+
+function parseEtiquetas(texto) {
+  const labels = texto.match(/\^XA[\s\S]*?\^XZ/g) || [];
+  const items = [];
+  labels.forEach(lbl => {
+    if (!/\^FDEnvio:|sender_id/.test(lbl)) return;
+    const fds = [...lbl.matchAll(/\^FD([^\^]*)\^FS/g)].map(m => decodeZpl(m[1]));
+    // Empresa remitente: primer campo (arriba a la izquierda)
+    let emp = '';
+    const empM = lbl.match(/\^FO120,22\^A0N,24,24\^FH?\^FD([^\^]*)\^FS/);
+    if (empM) emp = decodeZpl(empM[1]);
+    // ID de cuenta del remitente (identificador confiable de la empresa)
+    let senderId = '';
+    const sidM = lbl.match(/"sender_id":\s*(\d+)/);
+    if (sidM) senderId = sidM[1];
+    // Comuna: texto grande centrado
+    let comuna = '';
+    const comM = lbl.match(/\^FO0,660\^A0N,40,40\^FB800,1,0,C\^FH?\^FD([^\^]*)\^FS/);
+    if (comM) comuna = decodeZpl(comM[1]);
+    // Texto completo para detectar Padre Hurtado / Colina (comuna + dirección)
+    const blob = fds.join(' ').toUpperCase();
+    const esRural = /PADRE\s+HURTADO|COLINA/.test(comuna.toUpperCase()) || /PADRE\s+HURTADO|COLINA/.test(blob);
+    items.push({ emp, senderId, comuna, esRural });
+  });
+  return items;
+}
+
+function resolverEmpresa(rawName, senderId) {
+  // 1) Mapeo por sender_id (más confiable)
+  if (senderId && REMITENTE_EMPRESA[senderId]) {
+    const dest = REMITENTE_EMPRESA[senderId];
+    const match = state.empresas.find(e => e.toUpperCase() === dest.toUpperCase());
+    return match || dest;
+  }
+  // 2) Coincidencia por nombre contra empresas registradas
+  let s = (rawName || '').split('#')[0].trim();
+  const byName = state.empresas.find(e => s.toUpperCase().includes(e.toUpperCase()));
+  if (byName) return byName;
+  // 3) Limpia nombre duplicado como respaldo
+  const half = s.length % 2 === 0 ? s.slice(0, s.length / 2).trim() : s;
+  return (s.startsWith(half) && half.length > 2) ? half : s;
+}
+
+function seleccionarSiExiste(selectId, valor) {
+  const sel = document.getElementById(selectId);
+  if (!sel || !valor) return false;
+  const opt = [...sel.options].find(o => o.value.toUpperCase() === valor.toUpperCase());
+  if (opt) { sel.value = opt.value; return true; }
+  return false;
+}
+
+function precargarEnvios(input) {
+  const file = input.files && input.files[0];
+  if (!file) return;
+  const resumen = document.getElementById('precarga-resumen');
+
+  const procesarTexto = (texto) => {
+    const items = parseEtiquetas(texto);
+    if (!items.length) {
+      resumen.style.display = 'block';
+      resumen.innerHTML = '<div style="margin-top:12px;padding:12px;border:1px solid var(--red);border-radius:8px;color:var(--red);font-size:12px;">⚠ No se encontraron etiquetas válidas en el archivo.</div>';
+      return;
+    }
+    // Agrupa por empresa
+    const porEmp = {};
+    items.forEach(it => {
+      const emp = resolverEmpresa(it.emp, it.senderId) || '(sin empresa)';
+      if (!porEmp[emp]) porEmp[emp] = { std: 0, rural: 0 };
+      it.esRural ? porEmp[emp].rural++ : porEmp[emp].std++;
+    });
+    const empresas = Object.keys(porEmp);
+    const totalStd = items.filter(i => !i.esRural).length;
+    const totalRural = items.filter(i => i.esRural).length;
+
+    // Empresa principal = la de mayor cantidad
+    const principal = empresas.slice().sort((a, b) =>
+      (porEmp[b].std + porEmp[b].rural) - (porEmp[a].std + porEmp[a].rural))[0];
+
+    // Autollenar campos
+    seleccionarSiExiste('f-empresa', principal);
+    if (!seleccionarSiExiste('f-transportista', 'Fast Way')) {
+      seleccionarSiExiste('f-transportista', 'FastWay');
+    }
+    seleccionarSiExiste('f-tipo-envio', 'flex');
+    toggleTipoEnvio();
+    document.getElementById('f-cant-std').value = porEmp[principal].std || '';
+    document.getElementById('f-cant-rural').value = porEmp[principal].rural || '';
+    updateTotalPaq();
+
+    // Resumen visual
+    let filas = empresas.map(e => {
+      const d = porEmp[e];
+      const marca = e === principal ? ' <span style="color:var(--success);">◀ autollenado</span>' : '';
+      return '<tr><td style="padding:5px 8px;">' + e + marca + '</td>' +
+             '<td style="padding:5px 8px;text-align:right;">' + d.std + '</td>' +
+             '<td style="padding:5px 8px;text-align:right;">' + d.rural + '</td>' +
+             '<td style="padding:5px 8px;text-align:right;font-weight:700;">' + (d.std + d.rural) + '</td></tr>';
+    }).join('');
+
+    let aviso = empresas.length > 1
+      ? '<div style="margin-top:8px;font-size:11px;color:var(--text3);">Se detectaron varias empresas. Se autollenó <b>' + principal + '</b>; registra las demás por separado.</div>'
+      : '';
+
+    resumen.style.display = 'block';
+    resumen.innerHTML =
+      '<div style="margin-top:14px;padding:14px;border:1px solid var(--success);border-radius:10px;background:var(--surface2);">' +
+        '<div style="font-size:13px;font-weight:700;margin-bottom:10px;">✓ ' + items.length + ' etiquetas leídas · ' +
+          totalStd + ' Standard · ' + totalRural + ' Rural</div>' +
+        '<table style="width:100%;border-collapse:collapse;font-size:12px;">' +
+          '<thead><tr style="border-bottom:1px solid var(--border);">' +
+            '<th style="padding:5px 8px;text-align:left;">Empresa</th>' +
+            '<th style="padding:5px 8px;text-align:right;">Standard</th>' +
+            '<th style="padding:5px 8px;text-align:right;">Rural</th>' +
+            '<th style="padding:5px 8px;text-align:right;">Total</th>' +
+          '</tr></thead><tbody>' + filas + '</tbody></table>' +
+          aviso +
+      '</div>';
+  };
+
+  const nombre = file.name.toLowerCase();
+  if (nombre.endsWith('.zip')) {
+    if (typeof JSZip === 'undefined') {
+      resumen.style.display = 'block';
+      resumen.innerHTML = '<div style="margin-top:12px;padding:12px;border:1px solid var(--red);border-radius:8px;color:var(--red);font-size:12px;">⚠ No se pudo cargar el lector de ZIP. Descomprime el archivo y sube el .txt.</div>';
+      return;
+    }
+    file.arrayBuffer().then(buf => JSZip.loadAsync(buf)).then(zip => {
+      const txtName = Object.keys(zip.files).find(n => n.toLowerCase().endsWith('.txt'));
+      if (!txtName) throw new Error('sin txt');
+      return zip.files[txtName].async('string');
+    }).then(procesarTexto).catch(() => {
+      resumen.style.display = 'block';
+      resumen.innerHTML = '<div style="margin-top:12px;padding:12px;border:1px solid var(--red);border-radius:8px;color:var(--red);font-size:12px;">⚠ No se pudo leer el ZIP.</div>';
+    });
+  } else {
+    file.text().then(procesarTexto).catch(() => {
+      resumen.style.display = 'block';
+      resumen.innerHTML = '<div style="margin-top:12px;padding:12px;border:1px solid var(--red);border-radius:8px;color:var(--red);font-size:12px;">⚠ No se pudo leer el archivo.</div>';
+    });
+  }
 }
 
 function initHistFiltros() {
