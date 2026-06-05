@@ -1278,9 +1278,10 @@ function limpiarForm() {
 
 // Mapa de cuentas MercadoEnvíos (sender_id) -> empresa registrada en la app.
 // Para agregar una nueva cuenta, añade aquí su número de remitente.
+// Mapa sender_id -> nombre EXACTO de la empresa en el dropdown (debe coincidir con Firebase).
 const REMITENTE_EMPRESA = {
-  '651703010': 'Cybernetic',
-  '688204963': 'Mascokits',
+  '651703010': 'Cybernetic SpA',
+  '688204963': 'Mascokits SpA',
 };
 
 function decodeZpl(s) {
@@ -1305,34 +1306,41 @@ function parseEtiquetas(texto) {
     let senderId = '';
     const sidM = lbl.match(/"sender_id":\s*(\d+)/);
     if (sidM) senderId = sidM[1];
+    // Fecha del despacho: campo "DD MMM" en la cabecera de la etiqueta
+    let fechaLabel = '';
+    const fechaM = lbl.match(/\^FO400,215\^A0N,48,48\^FB400,1,0,C\^FD(\d{2})\s+([A-Z]{3})\^FS/);
+    if (fechaM) {
+      const meses = { ENE:1,FEB:2,MAR:3,ABR:4,MAY:5,JUN:6,JUL:7,AGO:8,SEP:9,OCT:10,NOV:11,DIC:12 };
+      const d = parseInt(fechaM[1], 10);
+      const m = meses[fechaM[2].toUpperCase()];
+      if (d && m) {
+        const y = new Date().getFullYear();
+        fechaLabel = y + '-' + String(m).padStart(2,'0') + '-' + String(d).padStart(2,'0');
+      }
+    }
     // Comuna: texto grande centrado
     let comuna = '';
     const comM = lbl.match(/\^FO0,660\^A0N,40,40\^FB800,1,0,C\^FH?\^FD([^\^]*)\^FS/);
     if (comM) comuna = decodeZpl(comM[1]);
-    // Fecha desde ZPL: ^FD04 JUN^FS
-    let fechaZpl = '';
-    const fechaM = lbl.match(/\^FD(\d{1,2})\s+(ENE|FEB|MAR|ABR|MAY|JUN|JUL|AGO|SEP|OCT|NOV|DIC)\^FS/i);
-    if (fechaM) fechaZpl = fechaM[1].padStart(2,'0') + ' ' + fechaM[2].toUpperCase();
     // Texto completo para detectar Padre Hurtado / Colina (comuna + dirección)
     const blob = fds.join(' ').toUpperCase();
     const esRural = /PADRE\s+HURTADO|COLINA/.test(comuna.toUpperCase()) || /PADRE\s+HURTADO|COLINA/.test(blob);
-    items.push({ emp, senderId, comuna, esRural, fechaZpl });
+    items.push({ emp, senderId, comuna, esRural, fechaLabel });
   });
   return items;
 }
 
 function resolverEmpresa(rawName, senderId) {
-  // 1) Mapeo por sender_id (más confiable)
+  // 1) Mapeo directo por sender_id — es el identificador más fiable.
+  //    El valor en REMITENTE_EMPRESA DEBE coincidir exactamente con el nombre en Firebase/dropdown.
   if (senderId && REMITENTE_EMPRESA[senderId]) {
-    const dest = REMITENTE_EMPRESA[senderId];
-    const match = state.empresas.find(e => e.toUpperCase() === dest.toUpperCase());
-    return match || dest;
+    return REMITENTE_EMPRESA[senderId];
   }
-  // 2) Coincidencia por nombre contra empresas registradas
-  let s = (rawName || '').split('#')[0].trim();
+  // 2) Fallback: coincidencia parcial por nombre contra empresas registradas
+  const s = (rawName || '').split('#')[0].trim();
   const byName = state.empresas.find(e => s.toUpperCase().includes(e.toUpperCase()));
   if (byName) return byName;
-  // 3) Limpia nombre duplicado como respaldo
+  // 3) Último recurso: limpiar nombre duplicado (ej: "Cybernetic SpA Cybernetic SpA")
   const half = s.length % 2 === 0 ? s.slice(0, s.length / 2).trim() : s;
   return (s.startsWith(half) && half.length > 2) ? half : s;
 }
@@ -1350,34 +1358,12 @@ function precargarEnvios(input) {
   if (!file) return;
   const resumen = document.getElementById('precarga-resumen');
 
-  // Detectar fecha desde el nombre del archivo (ej. Etiqueta_MercadoEnvios-202606041742.zip)
-  const MESES_ZPL = {ENE:'01',FEB:'02',MAR:'03',ABR:'04',MAY:'05',JUN:'06',JUL:'07',AGO:'08',SEP:'09',OCT:'10',NOV:'11',DIC:'12'};
-  let fechaDetectada = null;
-  const fnMatch = file.name.match(/(\d{4})(\d{2})(\d{2})/);
-  if (fnMatch) fechaDetectada = `${fnMatch[1]}-${fnMatch[2]}-${fnMatch[3]}`;
-
   const procesarTexto = (texto) => {
     const items = parseEtiquetas(texto);
     if (!items.length) {
       resumen.style.display = 'block';
       resumen.innerHTML = '<div style="margin-top:12px;padding:12px;border:1px solid var(--red);border-radius:8px;color:var(--red);font-size:12px;">⚠ No se encontraron etiquetas válidas en el archivo.</div>';
       return;
-    }
-
-    // Fallback de fecha: leer desde ZPL si el nombre no tenía fecha
-    if (!fechaDetectada) {
-      const zplFecha = items.find(i => i.fechaZpl)?.fechaZpl;
-      if (zplFecha) {
-        const [dd, mmm] = zplFecha.split(' ');
-        const mm = MESES_ZPL[mmm] || '01';
-        const yyyy = new Date().getFullYear();
-        fechaDetectada = `${yyyy}-${mm}-${dd}`;
-      }
-    }
-
-    // Autollenar fecha si se detectó
-    if (fechaDetectada) {
-      document.getElementById('f-fecha').value = fechaDetectada;
     }
     // Agrupa por empresa
     const porEmp = {};
@@ -1395,6 +1381,8 @@ function precargarEnvios(input) {
       (porEmp[b].std + porEmp[b].rural) - (porEmp[a].std + porEmp[a].rural))[0];
 
     // Autollenar campos
+    const fechaDetectada = items.find(i => i.fechaLabel)?.fechaLabel || '';
+    if (fechaDetectada) document.getElementById('f-fecha').value = fechaDetectada;
     seleccionarSiExiste('f-empresa', principal);
     if (!seleccionarSiExiste('f-transportista', 'Fast Way')) {
       seleccionarSiExiste('f-transportista', 'FastWay');
