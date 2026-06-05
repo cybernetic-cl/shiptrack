@@ -1279,8 +1279,8 @@ function limpiarForm() {
 // Mapa de cuentas MercadoEnvíos (sender_id) -> empresa registrada en la app.
 // Para agregar una nueva cuenta, añade aquí su número de remitente.
 const REMITENTE_EMPRESA = {
-  '651703010': 'Cybernetic SpA',
-  '688204963': 'Mascokits SpA',
+  '651703010': 'Cybernetic',
+  '688204963': 'Mascokits',
 };
 
 function decodeZpl(s) {
@@ -1309,10 +1309,14 @@ function parseEtiquetas(texto) {
     let comuna = '';
     const comM = lbl.match(/\^FO0,660\^A0N,40,40\^FB800,1,0,C\^FH?\^FD([^\^]*)\^FS/);
     if (comM) comuna = decodeZpl(comM[1]);
+    // Fecha desde ZPL: ^FD04 JUN^FS
+    let fechaZpl = '';
+    const fechaM = lbl.match(/\^FD(\d{1,2})\s+(ENE|FEB|MAR|ABR|MAY|JUN|JUL|AGO|SEP|OCT|NOV|DIC)\^FS/i);
+    if (fechaM) fechaZpl = fechaM[1].padStart(2,'0') + ' ' + fechaM[2].toUpperCase();
     // Texto completo para detectar Padre Hurtado / Colina (comuna + dirección)
     const blob = fds.join(' ').toUpperCase();
     const esRural = /PADRE\s+HURTADO|COLINA/.test(comuna.toUpperCase()) || /PADRE\s+HURTADO|COLINA/.test(blob);
-    items.push({ emp, senderId, comuna, esRural });
+    items.push({ emp, senderId, comuna, esRural, fechaZpl });
   });
   return items;
 }
@@ -1346,12 +1350,34 @@ function precargarEnvios(input) {
   if (!file) return;
   const resumen = document.getElementById('precarga-resumen');
 
+  // Detectar fecha desde el nombre del archivo (ej. Etiqueta_MercadoEnvios-202606041742.zip)
+  const MESES_ZPL = {ENE:'01',FEB:'02',MAR:'03',ABR:'04',MAY:'05',JUN:'06',JUL:'07',AGO:'08',SEP:'09',OCT:'10',NOV:'11',DIC:'12'};
+  let fechaDetectada = null;
+  const fnMatch = file.name.match(/(\d{4})(\d{2})(\d{2})/);
+  if (fnMatch) fechaDetectada = `${fnMatch[1]}-${fnMatch[2]}-${fnMatch[3]}`;
+
   const procesarTexto = (texto) => {
     const items = parseEtiquetas(texto);
     if (!items.length) {
       resumen.style.display = 'block';
       resumen.innerHTML = '<div style="margin-top:12px;padding:12px;border:1px solid var(--red);border-radius:8px;color:var(--red);font-size:12px;">⚠ No se encontraron etiquetas válidas en el archivo.</div>';
       return;
+    }
+
+    // Fallback de fecha: leer desde ZPL si el nombre no tenía fecha
+    if (!fechaDetectada) {
+      const zplFecha = items.find(i => i.fechaZpl)?.fechaZpl;
+      if (zplFecha) {
+        const [dd, mmm] = zplFecha.split(' ');
+        const mm = MESES_ZPL[mmm] || '01';
+        const yyyy = new Date().getFullYear();
+        fechaDetectada = `${yyyy}-${mm}-${dd}`;
+      }
+    }
+
+    // Autollenar fecha si se detectó
+    if (fechaDetectada) {
+      document.getElementById('f-fecha').value = fechaDetectada;
     }
     // Agrupa por empresa
     const porEmp = {};
@@ -1397,7 +1423,8 @@ function precargarEnvios(input) {
     resumen.innerHTML =
       '<div style="margin-top:14px;padding:14px;border:1px solid var(--success);border-radius:10px;background:var(--surface2);">' +
         '<div style="font-size:13px;font-weight:700;margin-bottom:10px;">✓ ' + items.length + ' etiquetas leídas · ' +
-          totalStd + ' Standard · ' + totalRural + ' Rural</div>' +
+          totalStd + ' Standard · ' + totalRural + ' Rural' +
+          (fechaDetectada ? ' · 📅 ' + fechaDetectada : '') + '</div>' +
         '<table style="width:100%;border-collapse:collapse;font-size:12px;">' +
           '<thead><tr style="border-bottom:1px solid var(--border);">' +
             '<th style="padding:5px 8px;text-align:left;">Empresa</th>' +
