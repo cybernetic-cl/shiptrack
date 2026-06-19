@@ -1057,7 +1057,7 @@
                 </div>
                 <div id="etq-emonto-w" style="display:none;margin-top:8px">
                   <div style="font-size:8px;letter-spacing:2px;color:var(--text3);margin-bottom:3px">MONTO A COBRAR</div>
-                  <input type="number" id="etq-emonto" placeholder="0" min="0" oninput="etqPreview()" style="font-size:22px;font-weight:900;text-align:center;width:100%;background:var(--input-bg);border:2px solid var(--text);border-radius:6px;padding:8px 12px;color:var(--text)">
+                  <input type="number" id="etq-emonto" placeholder="0" min="0" oninput="etqPreview();etqSyncMonto()" style="font-size:22px;font-weight:900;text-align:center;width:100%;background:var(--input-bg);border:2px solid var(--text);border-radius:6px;padding:8px 12px;color:var(--text)">
                 </div>
               </div>
               <div>
@@ -1068,7 +1068,7 @@
                 </div>
                 <div id="etq-pmonto-w" style="display:none;margin-top:8px">
                   <div style="font-size:8px;letter-spacing:2px;color:var(--text3);margin-bottom:3px">MONTO A COBRAR</div>
-                  <input type="number" id="etq-pmonto" placeholder="0" min="0" oninput="etqPreview()" style="font-size:22px;font-weight:900;text-align:center;width:100%;background:var(--input-bg);border:2px solid var(--text);border-radius:6px;padding:8px 12px;color:var(--text)">
+                  <input type="number" id="etq-pmonto" placeholder="0" min="0" oninput="etqPreview();etqSyncMonto()" style="font-size:22px;font-weight:900;text-align:center;width:100%;background:var(--input-bg);border:2px solid var(--text);border-radius:6px;padding:8px 12px;color:var(--text)">
                 </div>
               </div>
             </div>
@@ -1288,6 +1288,10 @@ function populateSelects() {
   populateSelect('f-transportista', state.transportistas);
   populateSelect('f-empresa', state.empresas);
   populateSelect('f-vendedor', state.vendedores);
+  // Etiquetas embedded form
+  populateSelect('etqr-trans',       state.transportistas);
+  populateSelect('etqr-empresa-reg', state.empresas);
+  populateSelect('etq-vendedor',     state.vendedores);
   populateSelect('d-transportista', state.transportistas);
   populateSelect('d-empresa', state.empresas);
   populateSelect('d-vendedor', state.vendedores);
@@ -3023,6 +3027,11 @@ function etqSetProd(v) {
   document.getElementById('etq-pmonto-w').style.display = (v==='no') ? 'block' : 'none';
   etqSyncReg(); etqPreview();
 }
+function etqSyncMonto() {
+  var total = (parseInt(etqV('etq-emonto'))||0) + (parseInt(etqV('etq-pmonto'))||0);
+  var fm = document.getElementById('etqr-monto');
+  if (fm) fm.value = total > 0 ? total : '';
+}
 function etqSyncReg() {
   var pagado = (etqSt.prod === 'si');
   var te = document.getElementById('etq-tipo-envio');
@@ -3030,9 +3039,7 @@ function etqSyncReg() {
   if (te) te.value = pagado ? 'Particular Pagado' : 'Particular Por Cobrar';
   if (es) es.textContent = pagado ? '\u2713 PAGADO' : '\u26a0 POR COBRAR';
   // Sync monto in embedded form
-  var total = (parseInt(etqV('etq-emonto'))||0) + (parseInt(etqV('etq-pmonto'))||0);
-  var fm = document.getElementById('etqr-monto');
-  if (fm) fm.value = total > 0 ? total : '';
+  etqSyncMonto();
   // Show/hide pago section
   var ps = document.getElementById('etqr-pago-section');
   if (ps) ps.style.display = (!pagado && total > 0) ? 'block' : (pagado ? 'none' : 'block');
@@ -3370,32 +3377,11 @@ function etqInit() {
   if (fi && !fi.value) fi.value = new Date().toISOString().slice(0,10);
   var ni = document.getElementById('etq-num');
   if (ni && !ni.value) ni.value = etqNextN();
-  // Transportistas from state
-  var ts = document.getElementById('etqr-trans');
-  if (ts && window.state && window.state.transportistas && window.state.transportistas.length) {
-    ts.innerHTML = '<option value="">Seleccionar...</option>'
-      + window.state.transportistas.map(function(t){
-          return '<option value="'+t+'">'+t+'</option>';
-        }).join('');
-  }
-  // Empresas from state
-  var es = document.getElementById('etqr-empresa-reg');
-  if (es && window.state && window.state.empresas && window.state.empresas.length) {
-    es.innerHTML = '<option value="">Seleccionar...</option>'
-      + window.state.empresas.map(function(e){
-          return '<option value="'+e+'">'+e+'</option>';
-        }).join('');
-  }
-  // Vendedores from state
-  var vs = document.getElementById('etq-vendedor');
-  if (vs && window.state && window.state.vendedores && window.state.vendedores.length) {
-    vs.innerHTML = '<option value="">Seleccionar...</option>'
-      + window.state.vendedores.map(function(v){
-          return '<option value="'+v+'">'+v+'</option>';
-        }).join('');
-  }
+  // Re-run populateSelects to fill etq selects (state already loaded by now)
+  if (typeof populateSelects === 'function') populateSelects();
   // Sync fecha to embedded form
   etqSyncRegFecha();
+  etqSyncMonto();
   etqSyncReg();
   etqPreview();
 }
