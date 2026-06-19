@@ -2934,7 +2934,7 @@ function toggleTheme() {
 .etq-pb.etq-pb-on{background:var(--surface);border-color:var(--text);color:var(--text);font-weight:900}
 .etq-pb.etq-pb-off{background:var(--text);border-color:var(--text);color:var(--surface)}
 .etq-label{width:10cm;min-height:15cm;background:#fff;border:2px solid #000;border-radius:3px;overflow:hidden;display:flex;flex-direction:column;font-family:Arial,Helvetica,sans-serif;color:#000;box-shadow:0 4px 20px rgba(0,0,0,.2)}
-.etq-hdr{background:#000;padding:7px 12px;display:flex;justify-content:space-between;align-items:flex-start}
+.etq-hdr{background:#000;padding:7px 12px 7px 14px;display:flex;justify-content:space-between;align-items:flex-start}
 .etq-hdr-l{flex:1;min-width:0}
 .etq-brand{color:#fff;font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:.3px;line-height:1.25}
 .etq-web{color:#aaa;font-size:6.5px;margin-top:1px;font-style:italic}
@@ -2943,13 +2943,13 @@ function toggleTheme() {
 .etq-num-l{color:#fff;font-size:16px;font-weight:900;letter-spacing:.5px}
 .etq-date-l{color:#777;font-size:6.5px;margin-top:1px}
 .etq-body{display:flex;flex:1;border-bottom:2px solid #000;min-height:9cm}
-.etq-col-l{flex:1.15;padding:8px 10px;border-right:1px dashed #bbb;display:flex;flex-direction:column;gap:2px}
+.etq-col-l{flex:1.15;padding:8px 10px 8px 14px;border-right:1px dashed #bbb;display:flex;flex-direction:column;gap:2px}
 .etq-dtag{font-size:6.5px;letter-spacing:2px;color:#999;font-weight:700;text-transform:uppercase;margin-bottom:3px}
 .etq-dname{font-size:16px;font-weight:900;color:#000;line-height:1.15}
-.etq-daddr{font-size:10px;color:#222;line-height:1.4;margin-top:2px}
-.etq-df{font-size:9.5px;color:#333;margin-top:2px}
+.etq-daddr{font-size:12px;color:#111;line-height:1.45;margin-top:3px;font-weight:500}
+.etq-df{font-size:12px;color:#111;margin-top:3px;font-weight:600}
 .etq-df b{color:#000}
-.etq-dnote{font-size:8px;color:#555;background:#f5f5f5;border:1px solid #ddd;border-radius:2px;padding:3px 5px;margin-top:5px;line-height:1.4}
+.etq-dnote{font-size:11px;color:#000;background:#f0f0f0;border:2px solid #000;border-radius:3px;padding:5px 7px;margin-top:6px;line-height:1.5;font-weight:700;text-transform:uppercase;letter-spacing:.3px}
 .etq-tags{display:flex;flex-wrap:wrap;gap:3px;margin-top:4px}
 .etq-tag{font-size:8px;font-weight:900;letter-spacing:.5px;padding:2px 6px;border-radius:3px;border:1.5px solid #000;color:#000;background:#fff;white-space:nowrap}
 .etq-tag-inv{background:#000;color:#fff;border-color:#000}
@@ -3228,26 +3228,31 @@ function etqZPL() {
   // Build left-column content with strict y tracking
   var col = '';
   var y = 158;
-  col += '^FO14,'+y+'^A0N,16,16^FDDESTINATARIO^FS\n'; y+=20;
-  col += '^FO14,'+y+'^A0N,46,46^FD'+asc(d.nombre)+'^FS\n'; y+=56;
-  col += '^FO14,'+y+'^A0N,24,24^FD'+asc(d.dir1)+'^FS\n';   y+=34;
-  if (d.tel) { col += '^FO14,'+y+'^A0N,22,22^FDTel: '+asc(d.tel)+'^FS\n'; y+=30; }
-  if (d.rut) { col += '^FO14,'+y+'^A0N,20,20^FDRUT: '+asc(d.rut)+'^FS\n'; y+=28; }
-  if (d.nota){ col += '^FO14,'+y+'^A0N,18,18^FD'+asc(d.nota)+'^FS\n'; y+=26; }
+  col += '^FO28,'+y+'^A0N,16,16^FDDESTINATARIO^FS\n'; y+=22;
+  col += '^FO28,'+y+'^A0N,46,46^FD'+asc(d.nombre)+'^FS\n'; y+=58;
+  col += '^FO28,'+y+'^A0N,30,30^FD'+asc(d.dir1)+'^FS\n';   y+=40;
+  if (d.tel) { col += '^FO28,'+y+'^A0N,28,28^FDTel: '+asc(d.tel)+'^FS\n'; y+=38; }
+  if (d.rut) { col += '^FO28,'+y+'^A0N,22,22^FDRUT: '+asc(d.rut)+'^FS\n'; y+=30; }
+  if (d.nota){
+    // Notes: inverted box for max visibility
+    col += '^FO20,'+(y+4)+'^GB460,50,50^FS\n';
+    col += '^FO28,'+(y+12)+'^A0N,28,28^FR^FD'+asc(d.nota)+'^FS\n';
+    y += 60;
+  }
 
   // Status block at FIXED position (y=590) regardless of content above
   var stY = 590;
   var pagado = (d.envio==='si' && d.prod==='si');
   var total  = (parseInt(d.emonto)||0) + (parseInt(d.pmonto)||0);
-  col += '^FO14,'+stY+'^GB480,3,3^FS\n';
+  col += '^FO20,'+stY+'^GB470,3,3^FS\n';
   stY += 14;
   if (pagado) {
-    col += '^FO14,'+stY+'^A0N,32,32^FB480,1,0,C^FD* PAGADO *^FS\n';
+    col += '^FO20,'+stY+'^A0N,32,32^FB470,1,0,C^FD* PAGADO *^FS\n';
   } else {
-    col += '^FO14,'+stY+'^A0N,28,28^FB480,1,0,C^FD* POR COBRAR *^FS\n';
-    stY += 38;
+    col += '^FO20,'+stY+'^A0N,28,28^FB470,1,0,C^FD* POR COBRAR *^FS\n';
+    stY += 40;
     if (total > 0) {
-      col += '^FO14,'+stY+'^A0N,54,54^FB480,1,0,C^FD'+asc(etqFmt(total))+'^FS\n';
+      col += '^FO20,'+stY+'^A0N,54,54^FB470,1,0,C^FD'+asc(etqFmt(total))+'^FS\n';
     }
   }
 
@@ -3258,10 +3263,10 @@ function etqZPL() {
   var zpl = '^XA\n^CI0\n^PW812\n^LL1218\n^LH0,0\n\n'
     // Header
     +'^FO0,0^GB812,145,145^FS\n'
-    +'^FO14,12^A0N,20,20^FR^FD'+sn+'^FS\n'
-    +'^FO14,38^A0N,15,15^FR^FD'+sw+'^FS\n'
-    +'^FO14,58^GB190,38,38^FS\n'
-    +'^FO18,65^A0N,22,22^FDENVIO EXPRESS^FS\n'
+    +'^FO28,12^A0N,20,20^FR^FD'+sn+'^FS\n'
+    +'^FO28,38^A0N,15,15^FR^FD'+sw+'^FS\n'
+    +'^FO28,58^GB190,38,38^FS\n'
+    +'^FO32,65^A0N,22,22^FDENVIO EXPRESS^FS\n'
     +'^FO505,8^A0N,50,50^FR^FDN '+num+'^FS\n'
     +'^FO505,63^A0N,17,17^FR^FD'+d.fecha+'^FS\n'
     +'^FO505,84^A0N,17,17^FR^FDDespachado^FS\n\n'
@@ -3357,13 +3362,18 @@ function etqRegistrarEnvio() {
   etqSelByText('f-vendedor', vendedor); dispF('f-vendedor');
   etqSelByText('f-tipo-pago', metodoPago);
 
-  // Save etiqueta record then navigate to form
+  // Save etiqueta record
   var d = etqDatos();
   etqSaveRegistro(d, 'registro');
 
-  // Navigate to Nuevo Envío page
-  var nav = document.querySelector('.nav-item[data-page="nuevo"]');
-  if (nav) nav.click(); else if (typeof showPage==='function') showPage('nuevo',null);
+  // Save directly to historial via guardarEnvio (fields already filled above)
+  if (typeof guardarEnvio === 'function') {
+    guardarEnvio();
+  }
+  // Show confirmation on etiquetas page
+  var conf = document.getElementById('etq-confirm');
+  if (conf) { conf.style.display='flex'; setTimeout(function(){conf.style.display='none';},3000); }
+  if (typeof showToast==='function') showToast('Envio registrado en historial');
 }
 function etqLimpiarReg() {
   var fields = ['etqr-fecha','etqr-trans','etqr-empresa-reg','etqr-cant','etqr-monto'];
