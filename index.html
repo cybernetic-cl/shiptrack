@@ -3040,9 +3040,9 @@ function etqSyncReg() {
   if (es) es.textContent = pagado ? '\u2713 PAGADO' : '\u26a0 POR COBRAR';
   // Sync monto in embedded form
   etqSyncMonto();
-  // Show/hide pago section
+  // Pago section always visible (monto puede ser 0 o tener valor)
   var ps = document.getElementById('etqr-pago-section');
-  if (ps) ps.style.display = (!pagado && total > 0) ? 'block' : (pagado ? 'none' : 'block');
+  if (ps) ps.style.display = 'block';
 }
 function etqSyncRegFecha() {
   var fi = document.getElementById('etq-fecha');
