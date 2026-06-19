@@ -992,7 +992,7 @@
                   <button class="btn btn-secondary" onclick="etqAutoNum()" style="font-size:11px;padding:6px 10px;white-space:nowrap">Auto</button>
                 </div>
               </div>
-              <div class="field"><label>Fecha</label><input type="date" id="etq-fecha" onchange="etqPreview()"></div>
+              <div class="field"><label>Fecha</label><input type="date" id="etq-fecha" onchange="etqPreview();etqSyncRegFecha()"></div>
               <div class="field" style="grid-column:1/-1">
                 <label>Nombre destinatario *</label>
                 <input type="text" id="etq-nombre" placeholder="Ej: Maria Gonzalez Lopez" oninput="etqApplyCase(this)">
@@ -1076,18 +1076,77 @@
 
           <div class="card">
             <div class="card-title">&#128666; Registro del Envio</div>
-            <div id="etq-reg-estado" style="font-size:14px;font-weight:900;letter-spacing:2px;text-align:center;padding:8px;border-radius:6px;border:2px solid var(--text);color:var(--text);background:var(--surface2);margin-bottom:14px">&#10003; PAGADO</div>
+
+            <!-- Estado auto-sincronizado -->
+            <div id="etq-reg-estado" style="font-size:14px;font-weight:900;letter-spacing:2px;text-align:center;padding:8px;border-radius:6px;border:2px solid var(--text);color:var(--text);background:var(--surface2);margin-bottom:16px">&#10003; PAGADO</div>
+
             <div class="form-grid">
-              <div class="field"><label>Transportista</label><select id="etq-trans"><option value="">Cargando...</option></select></div>
-              <div class="field"><label>Tipo de Envio</label><input type="text" id="etq-tipo-envio" readonly style="background:var(--surface2);font-weight:700;cursor:default" value="Particular Pagado"></div>
-              <div class="field"><label>Paquete</label><select id="etq-tipo-paq"><option value="standard">Standard</option><option value="rural">Rural</option></select></div>
-              <div class="field"><label>Metodo de Pago</label><select id="etq-metodo-pago"><option value="efectivo">Efectivo</option><option value="transferencia">Transferencia</option></select></div>
-              <div class="field"><label>Vendedor</label><select id="etq-vendedor"><option value="">Seleccionar...</option></select></div>
+              <!-- Fecha: auto desde etiqueta -->
+              <div class="field">
+                <label>Fecha <span class="req">*</span></label>
+                <input type="date" id="etqr-fecha">
+              </div>
+              <!-- Transportista: usuario selecciona -->
+              <div class="field">
+                <label>Transportista <span class="req">*</span></label>
+                <select id="etqr-trans"><option value="">Seleccionar...</option></select>
+              </div>
+              <!-- Empresa: usuario selecciona -->
+              <div class="field">
+                <label>Empresa <span class="req">*</span></label>
+                <select id="etqr-empresa-reg"><option value="">Seleccionar...</option></select>
+              </div>
+              <!-- Tipo de envío: auto desde pagado/por cobrar -->
+              <div class="field">
+                <label>Tipo de Envio <span class="req">*</span></label>
+                <input type="text" id="etq-tipo-envio" readonly
+                  style="background:var(--surface2);font-weight:700;cursor:default;color:var(--text)"
+                  value="Particular Pagado">
+              </div>
+              <!-- Tipo paquete: auto desde rural detection -->
+              <div class="field">
+                <label>Paquete (auto)</label>
+                <input type="text" id="etqr-tipo-paq-display" readonly
+                  style="background:var(--surface2);font-weight:700;cursor:default;color:var(--text)"
+                  value="Standard">
+                <input type="hidden" id="etq-tipo-paq" value="standard">
+              </div>
+              <!-- Cant standard/rural: auto -->
+              <div class="field">
+                <label>Cantidad</label>
+                <input type="number" id="etqr-cant" value="1" min="1"
+                  style="font-weight:700;font-size:16px">
+              </div>
             </div>
-            <div style="margin-top:14px">
-              <button class="btn btn-primary" style="width:100%;font-size:13px;padding:11px" onclick="etqRegistrarEnvio()">
-                &#10133; Pre-llenar y Registrar en Nuevo Envio
-              </button>
+
+            <!-- Monto / Vendedor / Pago -->
+            <div id="etqr-pago-section" style="margin-top:12px;padding-top:12px;border-top:1px solid var(--border)">
+              <div class="form-grid">
+                <!-- Monto: auto desde etiqueta -->
+                <div class="field">
+                  <label>Monto</label>
+                  <input type="number" id="etqr-monto" placeholder="0"
+                    style="font-weight:700;font-size:16px">
+                </div>
+                <!-- Vendedor: usuario selecciona -->
+                <div class="field">
+                  <label>Vendedor <span class="req">*</span></label>
+                  <select id="etq-vendedor"><option value="">Seleccionar...</option></select>
+                </div>
+                <!-- Tipo pago: manual -->
+                <div class="field">
+                  <label>Tipo de Pago</label>
+                  <select id="etq-metodo-pago">
+                    <option value="efectivo">Efectivo</option>
+                    <option value="transferencia">Transferencia</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            <div class="btn-row" style="margin-top:16px">
+              <button class="btn btn-primary" onclick="etqRegistrarEnvio()">&#10133; Registrar Envio</button>
+              <button class="btn btn-secondary" onclick="etqLimpiarReg()">&#8635; Limpiar</button>
             </div>
           </div>
         </div>
@@ -2923,7 +2982,7 @@ function etqApplyCase(el) {
   var p = el.selectionStart;
   el.value = etqTC(el.value);
   try { el.setSelectionRange(p,p); } catch(e) {}
-  if (el.id==='etq-ciudad') etqAutoRural(el.value);
+  if (el.id==='etq-ciudad') { etqSyncRegPaq(el.value); etqAutoRural(el.value); }
   etqPreview();
 }
 
@@ -2970,6 +3029,25 @@ function etqSyncReg() {
   var es = document.getElementById('etq-reg-estado');
   if (te) te.value = pagado ? 'Particular Pagado' : 'Particular Por Cobrar';
   if (es) es.textContent = pagado ? '\u2713 PAGADO' : '\u26a0 POR COBRAR';
+  // Sync monto in embedded form
+  var total = (parseInt(etqV('etq-emonto'))||0) + (parseInt(etqV('etq-pmonto'))||0);
+  var fm = document.getElementById('etqr-monto');
+  if (fm) fm.value = total > 0 ? total : '';
+  // Show/hide pago section
+  var ps = document.getElementById('etqr-pago-section');
+  if (ps) ps.style.display = (!pagado && total > 0) ? 'block' : (pagado ? 'none' : 'block');
+}
+function etqSyncRegFecha() {
+  var fi = document.getElementById('etq-fecha');
+  var fr = document.getElementById('etqr-fecha');
+  if (fi && fr) fr.value = fi.value;
+}
+function etqSyncRegPaq(ciudad) {
+  var rural = etqIsRural(ciudad);
+  var hidden = document.getElementById('etq-tipo-paq');
+  var display = document.getElementById('etqr-tipo-paq-display');
+  if (hidden)  hidden.value  = rural ? 'rural' : 'standard';
+  if (display) display.value = rural ? 'Rural'  : 'Standard';
 }
 function etqChangeEmpresa() {
   var v = parseInt(document.getElementById('etq-empresa').value) || 0;
@@ -2992,7 +3070,7 @@ function etqDatos() {
     region:etqV('etq-region'), tel:etqV('etq-tel'), rut:etqV('etq-rut'),
     nota:etqV('etq-nota'), envio:etqSt.envio, emonto:etqV('etq-emonto'),
     prod:etqSt.prod, pmonto:etqV('etq-pmonto'),
-    trans:etqV('etq-trans'), tipoPaq:etqV('etq-tipo-paq'),
+    trans:etqV('etqr-trans'), tipoPaq:etqV('etq-tipo-paq'),
     tipoEnvio:etqV('etq-tipo-envio'), metodoPago:etqV('etq-metodo-pago'),
     vendedor:etqV('etq-vendedor')
   };
@@ -3111,67 +3189,102 @@ function etqImprimir() {
   var d = etqDatos();
   if (!d.nombre||!d.ciudad) { alert('Completa Nombre y Ciudad/Comuna.'); return; }
   var html = etqBuildPrintDoc(d);
-  var fr = document.getElementById('etq-fr');
-  if (!fr) {
-    fr = document.createElement('iframe');
-    fr.id = 'etq-fr';
-    fr.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;border:0;z-index:9999;background:#ccc';
-    document.body.appendChild(fr);
-  }
-  fr.style.display = 'block';
-  fr.srcdoc = html;
+  var blob = new Blob([html], {type:'text/html;charset=utf-8'});
+  var url  = URL.createObjectURL(blob);
+  window.open(url, '_blank');
+  setTimeout(function(){ URL.revokeObjectURL(url); }, 10000);
   etqSaveRegistro(d, 'html');
 }
 
 function etqZPL() {
   var d = etqDatos();
   if (!d.nombre||!d.ciudad) { alert('Completa Nombre y Ciudad/Comuna.'); return; }
+
   function asc(s) {
-    var m={'a':'a','e':'e','i':'i','o':'o','u':'u','n':'n'};
-    return s.replace(/[^\x00-\x7F]/g, function(c){ return m[c.toLowerCase()]||''; })
-            .replace(/[\^~]/g,'');
+    var m = {'a':'a','e':'e','i':'i','o':'o','u':'u','n':'n',
+             'A':'A','E':'E','I':'I','O':'O','U':'U','N':'N'};
+    return String(s||'').replace(/[^\x00-\x7F]/g, function(c){ return m[c]||''; })
+                        .replace(/[\^~]/g,'').trim();
   }
+
   var city = asc(d.ciudad).toUpperCase();
   var reg  = asc(d.region).toUpperCase();
-  var cl=city.length, cfs=cl<=8?74:cl<=11?58:cl<=15?44:cl<=20?34:26;
-  var cy = Math.max(200, 456-Math.floor(cfs/2));
-  var py=310, pl='';
-  if (d.envio==='si') { pl+='^FO14,'+py+'^A0N,18,18^FDENVIO PAGADO^FS\n'; py+=22; }
-  else if (d.emonto)  { pl+='^FO14,'+py+'^A0N,18,18^FDCOBRAR ENV '+asc(etqFmt(d.emonto))+'^FS\n'; py+=22; }
-  if (d.prod==='si')  { pl+='^FO14,'+py+'^A0N,18,18^FDPRODUCTO PAGADO^FS\n'; py+=22; }
-  else if (d.pmonto)  { pl+='^FO14,'+py+'^A0N,18,18^FDCOBRAR PROD '+asc(etqFmt(d.pmonto))+'^FS\n'; py+=22; }
-  if (d.nota) { pl+='^FO14,'+(py+4)+'^A0N,16,16^FD'+asc(d.nota)+'^FS\n'; }
-  var sn = asc(d.empresa?d.empresa.nombre:'DMP').toUpperCase();
-  var sw = asc(d.empresa?d.empresa.web:'distribuidoramp.cl');
-  var num = asc(d.num);
+  var num  = asc(d.num)||'----';
+  var sn   = asc(d.empresa ? d.empresa.nombre : 'DMP').toUpperCase();
+  var sw   = asc(d.empresa ? d.empresa.web   : 'distribuidoramp.cl');
+
+  // City font + vertical center in right col (y=148 to y=770 = 622 dots)
+  var cl = city.length;
+  var cfs = cl<=6?74 : cl<=8?60 : cl<=10?48 : cl<=13?38 : cl<=16?30 : cl<=20?24 : 20;
+  var cy = Math.max(200, Math.floor((148+770)/2) - Math.floor(cfs*1.2));
+
+  // Build left-column content with strict y tracking
+  var col = '';
+  var y = 158;
+  col += '^FO14,'+y+'^A0N,16,16^FDDESTINATARIO^FS\n'; y+=20;
+  col += '^FO14,'+y+'^A0N,46,46^FD'+asc(d.nombre)+'^FS\n'; y+=56;
+  col += '^FO14,'+y+'^A0N,24,24^FD'+asc(d.dir1)+'^FS\n';   y+=34;
+  if (d.tel) { col += '^FO14,'+y+'^A0N,22,22^FDTel: '+asc(d.tel)+'^FS\n'; y+=30; }
+  if (d.rut) { col += '^FO14,'+y+'^A0N,20,20^FDRUT: '+asc(d.rut)+'^FS\n'; y+=28; }
+  if (d.nota){ col += '^FO14,'+y+'^A0N,18,18^FD'+asc(d.nota)+'^FS\n'; y+=26; }
+
+  // Status block at FIXED position (y=590) regardless of content above
+  var stY = 590;
+  var pagado = (d.envio==='si' && d.prod==='si');
+  var total  = (parseInt(d.emonto)||0) + (parseInt(d.pmonto)||0);
+  col += '^FO14,'+stY+'^GB480,3,3^FS\n';
+  stY += 14;
+  if (pagado) {
+    col += '^FO14,'+stY+'^A0N,32,32^FB480,1,0,C^FD* PAGADO *^FS\n';
+  } else {
+    col += '^FO14,'+stY+'^A0N,28,28^FB480,1,0,C^FD* POR COBRAR *^FS\n';
+    stY += 38;
+    if (total > 0) {
+      col += '^FO14,'+stY+'^A0N,54,54^FB480,1,0,C^FD'+asc(etqFmt(total))+'^FS\n';
+    }
+  }
+
+  // Barcode: Code128 width @ BY3 ≈ 238 dots for 4 chars, center = (812-238)/2 = 287
+  // Use fixed x=287 (safe for 4-digit order numbers)
+  var bcX = 287;
+
   var zpl = '^XA\n^CI0\n^PW812\n^LL1218\n^LH0,0\n\n'
+    // Header
     +'^FO0,0^GB812,145,145^FS\n'
     +'^FO14,12^A0N,20,20^FR^FD'+sn+'^FS\n'
-    +'^FO14,38^A0N,16,16^FR^FD'+sw+'^FS\n'
-    +'^FO14,60^GB190,36,36^FS\n'
-    +'^FO18,66^A0N,22,22^FDENVIO EXPRESS^FS\n'
-    +'^FO520,10^A0N,48,48^FR^FDN '+num+'^FS\n'
-    +'^FO520,64^A0N,18,18^FR^FD'+d.fecha+'^FS\n'
-    +'^FO520,86^A0N,18,18^FR^FDDespachado^FS\n\n'
+    +'^FO14,38^A0N,15,15^FR^FD'+sw+'^FS\n'
+    +'^FO14,58^GB190,38,38^FS\n'
+    +'^FO18,65^A0N,22,22^FDENVIO EXPRESS^FS\n'
+    +'^FO505,8^A0N,50,50^FR^FDN '+num+'^FS\n'
+    +'^FO505,63^A0N,17,17^FR^FD'+d.fecha+'^FS\n'
+    +'^FO505,84^A0N,17,17^FR^FDDespachado^FS\n\n'
+    // Separator
     +'^FO0,145^GB812,3,3^FS\n\n'
-    +'^FO14,158^A0N,18,18^FDDESTINATARIO^FS\n'
-    +'^FO14,180^A0N,48,48^FD'+asc(d.nombre)+'^FS\n'
-    +'^FO14,238^A0N,26,26^FD'+asc(d.dir1)+'^FS\n'
-    +(d.tel ? '^FO14,272^A0N,24,24^FDTel: '+asc(d.tel)+'^FS\n' : '')
-    +(d.rut ? '^FO14,298^A0N,20,20^FDRUT: '+asc(d.rut)+'^FS\n' : '')
-    +pl+'\n'
+    // Left col content
+    +col+'\n'
+    // Vertical divider
     +'^FO500,145^GB3,626,3^FS\n\n'
-    +'^FO503,'+cy+'^A0N,'+cfs+','+cfs+'^FB299,2,10,C^FD'+city+'^FS\n'
-    +(reg ? '^FO503,'+(cy+cfs*2+20)+'^GB299,3,3^FS\n^FO503,'+(cy+cfs*2+32)+'^A0N,18,18^FB299,2,6,C^FD'+reg+'^FS\n' : '')
+    // Right col: city
+    +'^FO503,'+cy+'^A0N,'+cfs+','+cfs+'^FB299,2,12,C^FD'+city+'^FS\n'
+    +(reg
+      ? '^FO503,'+(cy+Math.floor(cfs*2.4))+'^GB299,3,3^FS\n'
+       +'^FO503,'+(cy+Math.floor(cfs*2.4)+10)+'^A0N,18,18^FB299,1,0,C^FD'+reg+'^FS\n'
+      : '')
+    // Footer separator
     +'\n^FO0,771^GB812,3,3^FS\n'
-    +'^FO0,782^BY3,3,110^BCN,110,N,N,N^FB812,1,0,C^FD'+num+'^FS\n'
+    // Barcode centered
+    +'^FO'+bcX+',782^BY3,3,110^BCN,110,N,N,N^FD'+num+'^FS\n'
+    // Number below barcode
     +'^FO0,900^A0N,26,26^FB812,1,0,C^FD'+num+'^FS\n'
-    +'^FO0,1046^A0N,56,56^FB812,1,0,C^FDENVIO EXPRESS^FS\n\n^XZ\n';
+    // ENVIO EXPRESS
+    +'^FO0,1046^A0N,56,56^FB812,1,0,C^FDENVIO EXPRESS^FS\n\n'
+    +'^XZ\n';
+
   var blob = new Blob([zpl], {type:'application/octet-stream'});
   var url  = URL.createObjectURL(blob);
   var a = document.createElement('a');
-  a.href=url; a.download='etiqueta_'+d.num+'.zpl'; a.click();
-  setTimeout(function(){URL.revokeObjectURL(url);}, 2000);
+  a.href=url; a.download='etiqueta_'+num+'.zpl'; a.click();
+  setTimeout(function(){ URL.revokeObjectURL(url); }, 2000);
   etqSaveRegistro(d, 'zpl');
 }
 
@@ -3185,36 +3298,71 @@ function etqSelByText(id, text) {
   }
 }
 function etqRegistrarEnvio() {
-  var d = etqDatos();
-  var nav = document.querySelector('.nav-item[data-page="nuevo"]');
-  if (nav) nav.click(); else if (typeof showPage==='function') showPage('nuevo',null);
-  setTimeout(function(){
-    var ff = document.getElementById('f-fecha');
-    if (ff) ff.value = etqV('etq-fecha')||new Date().toISOString().slice(0,10);
-    etqSelByText('f-transportista', d.trans);
-    var empSel = document.getElementById('f-empresa');
-    if (empSel && d.empresa) {
-      for (var i=0; i<empSel.options.length; i++) {
-        if (empSel.options[i].text.indexOf(d.empresa.nombre.split(' ')[0])!==-1) {
-          empSel.selectedIndex=i; break;
-        }
+  // Validate required fields
+  var trans   = etqV('etqr-trans');
+  var empresa = etqV('etqr-empresa-reg');
+  var vendedor= etqV('etq-vendedor');
+  if (!etqV('etq-nombre')||!etqV('etq-ciudad')) { alert('Completa Nombre y Ciudad en la etiqueta.'); return; }
+  if (!trans)    { alert('Selecciona el Transportista.'); return; }
+  if (!empresa)  { alert('Selecciona la Empresa.'); return; }
+  if (!vendedor) { alert('Selecciona el Vendedor.'); return; }
+
+  // Copy all values to the main f-* form fields
+  var fecha   = etqV('etqr-fecha') || new Date().toISOString().slice(0,10);
+  var tipoPaq = etqV('etq-tipo-paq') || 'standard';
+  var cant    = parseInt(etqV('etqr-cant'))||1;
+  var monto   = parseInt(etqV('etqr-monto'))||0;
+  var metodoPago = etqV('etq-metodo-pago');
+  var tipoEnvio  = etqV('etq-tipo-envio');
+
+  function setF(id, val) { var e=document.getElementById(id); if(e) e.value=val; }
+  function dispF(id)     { var e=document.getElementById(id); if(e) e.dispatchEvent(new Event('change')); }
+  function dispFI(id)    { var e=document.getElementById(id); if(e) e.dispatchEvent(new Event('input')); }
+
+  setF('f-fecha', fecha);
+  etqSelByText('f-transportista', trans); dispF('f-transportista');
+
+  // Match empresa by text
+  var empSel = document.getElementById('f-empresa');
+  if (empSel) {
+    for (var i=0; i<empSel.options.length; i++) {
+      if (empSel.options[i].text.trim() === empresa.trim() ||
+          empSel.options[i].value.trim() === empresa.trim()) {
+        empSel.selectedIndex = i; break;
       }
     }
-    etqSelByText('f-tipo-envio', d.tipoEnvio);
-    if (typeof toggleTipoEnvio==='function') toggleTipoEnvio();
-    if (d.tipoPaq==='rural') {
-      var cr=document.getElementById('f-cant-rural');
-      if(cr){cr.value='1';cr.dispatchEvent(new Event('input'));}
-    } else {
-      var cs=document.getElementById('f-cant-std');
-      if(cs){cs.value='1';cs.dispatchEvent(new Event('input'));}
-    }
-    var total=(parseInt(d.emonto)||0)+(parseInt(d.pmonto)||0);
-    var fm=document.getElementById('f-monto');
-    if(fm&&total>0)fm.value=total;
-    etqSelByText('f-vendedor',d.vendedor);
-    etqSelByText('f-tipo-pago',d.metodoPago);
-  }, 250);
+    dispF('f-empresa');
+  }
+
+  etqSelByText('f-tipo-envio', tipoEnvio); dispF('f-tipo-envio');
+  if (typeof toggleTipoEnvio==='function') toggleTipoEnvio();
+
+  // Set quantities
+  if (tipoPaq==='rural') {
+    setF('f-cant-std','0'); dispFI('f-cant-std');
+    setF('f-cant-rural', String(cant)); dispFI('f-cant-rural');
+  } else {
+    setF('f-cant-std', String(cant)); dispFI('f-cant-std');
+    setF('f-cant-rural','0'); dispFI('f-cant-rural');
+  }
+
+  if (monto>0) { setF('f-monto', String(monto)); }
+  etqSelByText('f-vendedor', vendedor); dispF('f-vendedor');
+  etqSelByText('f-tipo-pago', metodoPago);
+
+  // Save etiqueta record then navigate to form
+  var d = etqDatos();
+  etqSaveRegistro(d, 'registro');
+
+  // Navigate to Nuevo Envío page
+  var nav = document.querySelector('.nav-item[data-page="nuevo"]');
+  if (nav) nav.click(); else if (typeof showPage==='function') showPage('nuevo',null);
+}
+function etqLimpiarReg() {
+  var fields = ['etqr-fecha','etqr-trans','etqr-empresa-reg','etqr-cant','etqr-monto'];
+  fields.forEach(function(id){var e=document.getElementById(id);if(e&&e.tagName==='SELECT')e.selectedIndex=0;else if(e)e.value='';});
+  document.getElementById('etq-vendedor').selectedIndex=0;
+  document.getElementById('etq-metodo-pago').selectedIndex=0;
 }
 
 function etqInit() {
@@ -3223,13 +3371,20 @@ function etqInit() {
   var ni = document.getElementById('etq-num');
   if (ni && !ni.value) ni.value = etqNextN();
   // Transportistas from state
-  var ts = document.getElementById('etq-trans');
+  var ts = document.getElementById('etqr-trans');
   if (ts && window.state && window.state.transportistas && window.state.transportistas.length) {
-    ts.innerHTML = window.state.transportistas.map(function(t){
-      return '<option value="'+t+'">'+t+'</option>';
-    }).join('');
-    if (!ts.value && window.state.transportistas.indexOf('Fastway')!==-1)
-      ts.value = 'Fastway';
+    ts.innerHTML = '<option value="">Seleccionar...</option>'
+      + window.state.transportistas.map(function(t){
+          return '<option value="'+t+'">'+t+'</option>';
+        }).join('');
+  }
+  // Empresas from state
+  var es = document.getElementById('etqr-empresa-reg');
+  if (es && window.state && window.state.empresas && window.state.empresas.length) {
+    es.innerHTML = '<option value="">Seleccionar...</option>'
+      + window.state.empresas.map(function(e){
+          return '<option value="'+e+'">'+e+'</option>';
+        }).join('');
   }
   // Vendedores from state
   var vs = document.getElementById('etq-vendedor');
@@ -3239,6 +3394,8 @@ function etqInit() {
           return '<option value="'+v+'">'+v+'</option>';
         }).join('');
   }
+  // Sync fecha to embedded form
+  etqSyncRegFecha();
   etqSyncReg();
   etqPreview();
 }
