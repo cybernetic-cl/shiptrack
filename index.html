@@ -161,53 +161,6 @@
     .page { padding: 16px; }
   }
 </style>
-<style>
-  /* ── ETIQUETAS MODULE ── */
-  .pago-btn {
-    display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;
-    padding:18px 12px;border-radius:10px;border:2px solid var(--border);
-    background:var(--surface2);color:var(--text2);font-family:var(--font-head);
-    font-size:20px;font-weight:800;cursor:pointer;transition:all .15s;letter-spacing:1px;
-    width:100%;
-  }
-  .pago-btn span:last-child{font-size:18px;letter-spacing:2px}
-  .pago-btn:hover{border-color:var(--text2)}
-  .pago-btn.active-si{background:rgba(39,168,94,0.12);border-color:#27a85e;color:#27a85e}
-  .pago-btn.active-no{background:rgba(224,48,80,0.12);border-color:#e03050;color:#e03050}
-  .etq-label{
-    width:10cm;min-height:15cm;background:#fff;border:2px solid #000;border-radius:3px;
-    overflow:hidden;display:flex;flex-direction:column;font-family:Arial,Helvetica,sans-serif;
-    color:#000;box-shadow:0 4px 20px rgba(0,0,0,.2);
-  }
-  .etq-hdr{background:#000;padding:7px 12px;display:flex;justify-content:space-between;align-items:flex-start}
-  .etq-hdr-l{flex:1;min-width:0}
-  .etq-brand{color:#fff;font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:.3px;line-height:1.25}
-  .etq-web{color:#aaa;font-size:6.5px;margin-top:1px;font-style:italic}
-  .etq-express-l{display:inline-block;background:#fff;color:#000;font-size:6.5px;font-weight:900;letter-spacing:1.5px;padding:2px 5px;border-radius:2px;margin-top:4px}
-  .etq-hdr-r{text-align:right;flex-shrink:0;margin-left:8px}
-  .etq-num-lbl{color:#fff;font-size:16px;font-weight:900;letter-spacing:.5px}
-  .etq-date-lbl{color:#777;font-size:6.5px;margin-top:1px}
-  .etq-body{display:flex;flex:1;border-bottom:2px solid #000}
-  .etq-col-l{flex:1.15;padding:8px 10px;border-right:1px dashed #bbb;display:flex;flex-direction:column;gap:2px}
-  .etq-dest-tag{font-size:6.5px;letter-spacing:2px;color:#999;font-weight:700;text-transform:uppercase;margin-bottom:3px}
-  .etq-dest-name{font-size:16px;font-weight:900;color:#000;line-height:1.15}
-  .etq-dest-addr{font-size:10px;color:#222;line-height:1.4;margin-top:2px}
-  .etq-dest-f{font-size:9.5px;color:#333;margin-top:2px}
-  .etq-dest-f b{color:#000}
-  .etq-dest-note{font-size:8px;color:#555;background:#f5f5f5;border:1px solid #ddd;border-radius:2px;padding:3px 5px;margin-top:5px;line-height:1.4}
-  .etq-pago-wrap{display:flex;flex-wrap:wrap;gap:4px;margin-top:7px}
-  .etq-pago-tag{font-size:8px;font-weight:900;letter-spacing:.5px;padding:3px 7px;border-radius:3px;border:1.5px solid}
-  .etq-tag-green{background:rgba(39,168,94,0.12);border-color:#27a85e;color:#1a7a44}
-  .etq-tag-red{background:rgba(224,48,80,0.1);border-color:#e03050;color:#c02040}
-  .etq-col-r{flex:.85;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:8px 6px;background:#f8f8f8;text-align:center;gap:5px}
-  .etq-city{font-weight:900;color:#000;line-height:1.05;text-transform:uppercase;letter-spacing:.3px;word-break:break-word;text-align:center}
-  .etq-region{font-size:7.5px;color:#555;text-transform:uppercase;letter-spacing:.8px;font-weight:700;border-top:1px solid #ccc;padding-top:4px;margin-top:2px;width:100%;text-align:center}
-  .etq-foot{background:#fff;padding:5px 0 4px;flex-shrink:0;text-align:center;display:flex;flex-direction:column;align-items:center;gap:2px}
-  .etq-bc{display:flex;align-items:flex-end;justify-content:center;gap:1px;height:26px}
-  .etq-bc span{background:#000;display:inline-block;min-width:1px}
-  .etq-bc-num{font-family:'Courier New',monospace;font-size:8.5px;letter-spacing:2px;color:#333}
-  .etq-express-b{font-size:13px;font-weight:900;letter-spacing:2px;color:#000;margin-top:2px}
-</style>
 <!-- Firebase -->
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
@@ -1002,165 +955,6 @@
 
 
     </div>
-
-    <!-- ═══════════════════════════════════════════════════════════
-         PÁGINA: GENERAR ETIQUETAS
-    ══════════════════════════════════════════════════════════════ -->
-    <div class="page" id="page-etiquetas">
-      <div class="page-header">
-        <div>
-          <div class="page-title">🏷️ Generar Etiquetas</div>
-          <div class="page-subtitle">ETIQUETA DE ENVÍO — DMP · 10×15 cm</div>
-        </div>
-        <div style="display:flex;gap:8px">
-          <button class="btn btn-primary" onclick="etqGenerarHTML()">🖨️ Imprimir / HTML</button>
-          <button class="btn btn-secondary" onclick="etqGenerarZPL()">📟 Descargar ZPL</button>
-        </div>
-      </div>
-
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;align-items:start">
-
-        <!-- COLUMNA IZQUIERDA: formulario -->
-        <div>
-
-          <!-- DESTINATARIO -->
-          <div class="card">
-            <div class="card-title">👤 Destinatario</div>
-            <div class="form-grid">
-              <div class="field" style="grid-column:1/-1">
-                <label>Nombre completo <span class="req">*</span></label>
-                <input type="text" id="etq-nombre" placeholder="Ej: María González López">
-              </div>
-              <div class="field" style="grid-column:1/-1">
-                <label>Dirección <span class="req">*</span></label>
-                <input type="text" id="etq-dir1" placeholder="Ej: Av. Providencia 1234, Depto 5B">
-              </div>
-              <div class="field">
-                <label>Ciudad / Comuna <span class="req">*</span></label>
-                <input type="text" id="etq-ciudad" placeholder="Ej: Las Condes" oninput="etqPreview()">
-              </div>
-              <div class="field">
-                <label>Región</label>
-                <select id="etq-region" onchange="etqPreview()">
-                  <option value="">— Seleccionar —</option>
-                  <option value="Region Metropolitana">Región Metropolitana</option>
-                  <option value="Valparaiso">Valparaíso</option>
-                  <option value="Biobio">Biobío</option>
-                  <option value="La Araucania">La Araucanía</option>
-                  <option value="Los Lagos">Los Lagos</option>
-                  <option value="O'Higgins">O'Higgins</option>
-                  <option value="Maule">Maule</option>
-                  <option value="Antofagasta">Antofagasta</option>
-                  <option value="Coquimbo">Coquimbo</option>
-                  <option value="Atacama">Atacama</option>
-                  <option value="Tarapaca">Tarapacá</option>
-                  <option value="Arica y Parinacota">Arica y Parinacota</option>
-                  <option value="Los Rios">Los Ríos</option>
-                  <option value="Aysen">Aysén</option>
-                  <option value="Magallanes">Magallanes</option>
-                  <option value="Nuble">Ñuble</option>
-                </select>
-              </div>
-              <div class="field">
-                <label>Teléfono</label>
-                <input type="text" id="etq-tel" placeholder="+56 9 1234 5678">
-              </div>
-              <div class="field">
-                <label>RUT</label>
-                <input type="text" id="etq-rut" placeholder="12.345.678-9">
-              </div>
-            </div>
-          </div>
-
-          <!-- ESTADO DEL PAGO — los botones grandes -->
-          <div class="card">
-            <div class="card-title">💳 Estado del Pago</div>
-
-            <!-- Envío pagado -->
-            <div style="margin-bottom:20px">
-              <div style="font-family:var(--font-head);font-size:15px;font-weight:700;color:var(--text);margin-bottom:10px">
-                ENVÍO PAGADO
-              </div>
-              <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
-                <button id="etq-envio-si" class="pago-btn pago-si active-si" onclick="etqPagoEnvio('si')">
-                  <span style="font-size:24px">✓</span>
-                  <span>SÍ</span>
-                </button>
-                <button id="etq-envio-no" class="pago-btn pago-no" onclick="etqPagoEnvio('no')">
-                  <span style="font-size:24px">✗</span>
-                  <span>NO</span>
-                </button>
-              </div>
-              <div id="etq-envio-monto-wrap" style="display:none" class="field">
-                <label>Monto envío cobrado</label>
-                <input type="number" id="etq-envio-monto" placeholder="$ 0" min="0" oninput="etqPreview()">
-              </div>
-            </div>
-
-            <div style="border-top:1px solid var(--border);padding-top:18px">
-              <!-- Producto pagado -->
-              <div style="font-family:var(--font-head);font-size:15px;font-weight:700;color:var(--text);margin-bottom:10px">
-                PRODUCTO PAGADO
-              </div>
-              <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
-                <button id="etq-prod-si" class="pago-btn pago-si active-si" onclick="etqPagoProd('si')">
-                  <span style="font-size:24px">✓</span>
-                  <span>SÍ</span>
-                </button>
-                <button id="etq-prod-no" class="pago-btn pago-no" onclick="etqPagoProd('no')">
-                  <span style="font-size:24px">✗</span>
-                  <span>NO</span>
-                </button>
-              </div>
-              <div id="etq-prod-monto-wrap" style="display:none" class="field">
-                <label>Monto producto cobrado</label>
-                <input type="number" id="etq-prod-monto" placeholder="$ 0" min="0" oninput="etqPreview()">
-              </div>
-            </div>
-          </div>
-
-          <!-- NOTAS -->
-          <div class="card">
-            <div class="card-title">📝 Notas del Envío</div>
-            <div class="field">
-              <textarea id="etq-nota" rows="3" placeholder="Instrucciones especiales, referencia, horario de entrega..."
-                style="width:100%;background:var(--input-bg);border:1px solid var(--border);border-radius:6px;padding:10px 12px;color:var(--text);font-family:var(--font-mono);font-size:12px;resize:vertical"
-                oninput="etqPreview()"></textarea>
-            </div>
-          </div>
-
-          <!-- N° de orden manual -->
-          <div class="card">
-            <div class="card-title">🔢 Referencia</div>
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
-              <div class="field">
-                <label>N° Orden / Referencia</label>
-                <input type="text" id="etq-num" placeholder="Ej: 2374" oninput="etqPreview()">
-              </div>
-              <div class="field">
-                <label>Fecha</label>
-                <input type="date" id="etq-fecha">
-              </div>
-            </div>
-          </div>
-
-        </div>
-
-        <!-- COLUMNA DERECHA: preview en vivo -->
-        <div style="position:sticky;top:20px">
-          <div class="card" style="padding:16px">
-            <div class="card-title">👁 Vista Previa</div>
-            <div style="display:flex;justify-content:center">
-              <div id="etq-preview-wrap" style="transform-origin:top center;transform:scale(0.72)">
-                <div id="etq-preview" class="etq-label"></div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-      </div>
-    </div>
-    <!-- FIN ETIQUETAS -->
 
   </main>
 </div>
@@ -2923,290 +2717,530 @@ function toggleTheme() {
   applyTheme(saved === 'dark');
 })();
 </script>
+</body>
+</html>
+
+
+<!-- ════════════════════════════ ETIQUETAS: CSS ════════════════════════════ -->
+<style id="etq-styles">
+.pago-btn{display:flex;flex-direction:row;align-items:center;justify-content:center;gap:6px;
+  padding:6px 10px;border-radius:5px;border:1.5px solid var(--border);
+  background:var(--surface2);color:var(--text2);font-size:11px;font-weight:700;
+  cursor:pointer;transition:all .12s;letter-spacing:.5px;width:100%}
+.pago-btn:hover{border-color:var(--text)}
+.pago-btn.pb-si-on{background:var(--surface);border-color:var(--text);color:var(--text);font-weight:900}
+.pago-btn.pb-no-on{background:var(--text);border-color:var(--text);color:var(--surface)}
+/* Label */
+.etq-label{width:10cm;min-height:15cm;background:#fff;border:2px solid #000;border-radius:3px;
+  overflow:hidden;display:flex;flex-direction:column;font-family:Arial,Helvetica,sans-serif;color:#000;
+  box-shadow:0 4px 20px rgba(0,0,0,.2)}
+.etq-hdr{background:#000;padding:7px 12px;display:flex;justify-content:space-between;align-items:flex-start}
+.etq-hdr-l{flex:1;min-width:0}
+.etq-brand{color:#fff;font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:.3px;line-height:1.25}
+.etq-web{color:#aaa;font-size:6.5px;margin-top:1px;font-style:italic}
+.etq-exp-l{display:inline-block;background:#fff;color:#000;font-size:6.5px;font-weight:900;letter-spacing:1.5px;padding:2px 5px;border-radius:2px;margin-top:4px}
+.etq-hdr-r{text-align:right;flex-shrink:0;margin-left:8px}
+.etq-num-l{color:#fff;font-size:16px;font-weight:900;letter-spacing:.5px}
+.etq-date-l{color:#777;font-size:6.5px;margin-top:1px}
+.etq-body{display:flex;flex:1;border-bottom:2px solid #000;min-height:9cm}
+.etq-col-l{flex:1.15;padding:8px 10px;border-right:1px dashed #bbb;display:flex;flex-direction:column;gap:2px}
+.etq-dtag{font-size:6.5px;letter-spacing:2px;color:#999;font-weight:700;text-transform:uppercase;margin-bottom:3px}
+.etq-dname{font-size:16px;font-weight:900;color:#000;line-height:1.15}
+.etq-daddr{font-size:10px;color:#222;line-height:1.4;margin-top:2px}
+.etq-df{font-size:9.5px;color:#333;margin-top:2px}
+.etq-df b{color:#000}
+.etq-dnote{font-size:8px;color:#555;background:#f5f5f5;border:1px solid #ddd;border-radius:2px;padding:3px 5px;margin-top:5px;line-height:1.4}
+.etq-tags{display:flex;flex-wrap:wrap;gap:3px;margin-top:4px}
+.etq-tag{font-size:8px;font-weight:900;letter-spacing:.5px;padding:2px 6px;border-radius:3px;border:1.5px solid #000;color:#000;background:#fff;white-space:nowrap}
+.etq-tag-inv{background:#000;color:#fff;border-color:#000}
+.etq-status{margin-top:auto;padding-top:6px;border-top:1.5px solid #000;display:flex;flex-direction:column;align-items:center;min-height:28px}
+.etq-status-txt{font-size:15px;font-weight:900;letter-spacing:2px;color:#000;text-transform:uppercase;text-align:center;line-height:1.2}
+.etq-status-monto{font-size:20px;font-weight:900;color:#000;letter-spacing:1px;text-align:center;margin-top:3px}
+.etq-col-r{flex:.85;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:8px 6px;background:#f8f8f8;text-align:center;gap:5px}
+.etq-city{font-weight:900;color:#000;line-height:1.05;text-transform:uppercase;letter-spacing:.3px;word-break:break-word;text-align:center}
+.etq-region{font-size:7.5px;color:#555;text-transform:uppercase;letter-spacing:.8px;font-weight:700;border-top:1px solid #ccc;padding-top:4px;margin-top:2px;width:100%;text-align:center}
+.etq-foot{background:#fff;padding:5px 0 4px;flex-shrink:0;text-align:center;display:flex;flex-direction:column;align-items:center;gap:2px}
+.etq-bc{display:flex;align-items:flex-end;justify-content:center;gap:1px;height:26px}
+.etq-bc span{background:#000;display:inline-block;min-width:1px}
+.etq-bc-num{font-family:'Courier New',monospace;font-size:8.5px;letter-spacing:2px;color:#333}
+.etq-exp-b{font-size:13px;font-weight:900;letter-spacing:2px;color:#000;margin-top:2px}
+@media print{
+  .etq-print-bar{display:none!important}
+  body>*:not(#etq-print-frame){display:none!important}
+  #etq-print-frame{display:block!important;position:fixed;top:0;left:0;width:100%;height:100%;border:none}
+}
+</style>
+
+<!-- ════════════════════════════ ETIQUETAS: PAGE HTML ═════════════════════ -->
+<div class="page" id="page-etiquetas">
+  <div class="page-header">
+    <div>
+      <div class="page-title">🏷️ Generar Etiquetas</div>
+      <div class="page-subtitle">ETIQUETA DE ENVÍO — 10 × 15 cm</div>
+    </div>
+    <div style="display:flex;gap:8px">
+      <button class="btn btn-secondary" onclick="etqImprimir()">🖨️ Imprimir</button>
+      <button class="btn btn-secondary" onclick="etqZPL()">📟 ZPL Zebra</button>
+      <button class="btn btn-primary"   onclick="etqGuardar()">💾 Guardar Registro</button>
+    </div>
+  </div>
+
+  <div style="display:grid;grid-template-columns:1fr 360px;gap:20px;align-items:start">
+
+    <!-- IZQUIERDA: formulario -->
+    <div>
+
+      <!-- DATOS DEL ENVÍO -->
+      <div class="card">
+        <div class="card-title">📦 Datos del Envío</div>
+        <div class="form-grid">
+          <div class="field">
+            <label>Empresa remitente</label>
+            <select id="etq-empresa" onchange="etqChangeEmpresa()">
+              <option value="0">DMP - Distribuidora de Materias Primas</option>
+              <option value="1">Cybernetic SpA</option>
+              <option value="2">Mascokits SpA</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>N° Orden</label>
+            <div style="display:flex;gap:6px">
+              <input type="text" id="etq-num" placeholder="1001" oninput="etqPreview()" style="flex:1">
+              <button class="btn btn-secondary" onclick="etqAutoNum()" style="font-size:11px;padding:6px 10px;white-space:nowrap">🔢 Auto</button>
+            </div>
+          </div>
+          <div class="field">
+            <label>Fecha</label>
+            <input type="date" id="etq-fecha" onchange="etqPreview()">
+          </div>
+          <div class="field" style="grid-column:1/-1">
+            <label>Nombre completo destinatario *</label>
+            <input type="text" id="etq-nombre" placeholder="Ej: María González López" oninput="etqApplyCase(this)">
+          </div>
+          <div class="field" style="grid-column:1/-1">
+            <label>Dirección *</label>
+            <input type="text" id="etq-dir1" placeholder="Ej: Av. Providencia 1234, Depto 5B" oninput="etqApplyCase(this)">
+          </div>
+          <div class="field">
+            <label>Ciudad / Comuna *</label>
+            <input type="text" id="etq-ciudad" list="etq-dl-comunas" placeholder="Ej: Las Condes" oninput="etqApplyCase(this)" autocomplete="off">
+            <datalist id="etq-dl-comunas">
+              <option>Cerrillos</option><option>Cerro Navia</option><option>Conchalí</option>
+              <option>El Bosque</option><option>Estación Central</option><option>Huechuraba</option>
+              <option>Independencia</option><option>La Cisterna</option><option>La Florida</option>
+              <option>La Granja</option><option>La Pintana</option><option>La Reina</option>
+              <option>Las Condes</option><option>Lo Barnechea</option><option>Lo Espejo</option>
+              <option>Lo Prado</option><option>Macul</option><option>Maipú</option>
+              <option>Ñuñoa</option><option>Pedro Aguirre Cerda</option><option>Peñalolén</option>
+              <option>Providencia</option><option>Pudahuel</option><option>Quilicura</option>
+              <option>Quinta Normal</option><option>Recoleta</option><option>Renca</option>
+              <option>San Joaquín</option><option>San Miguel</option><option>San Ramón</option>
+              <option>Santiago</option><option>Vitacura</option>
+              <option>Buin</option><option>Calera de Tango</option><option>Colina</option>
+              <option>Curacaví</option><option>El Monte</option><option>Isla de Maipo</option>
+              <option>Lampa</option><option>María Pinto</option><option>Melipilla</option>
+              <option>Padre Hurtado</option><option>Paine</option><option>Peñaflor</option>
+              <option>Pirque</option><option>San José de Maipo</option><option>San Pedro</option>
+              <option>Talagante</option><option>Til Til</option>
+            </datalist>
+          </div>
+          <div class="field">
+            <label>Región</label>
+            <select id="etq-region" onchange="etqPreview()">
+              <option value="Region Metropolitana" selected>Región Metropolitana</option>
+              <option value="Valparaiso">Valparaíso</option>
+              <option value="Biobio">Biobío</option>
+              <option value="La Araucania">La Araucanía</option>
+              <option value="Los Lagos">Los Lagos</option>
+              <option value="O'Higgins">O'Higgins</option>
+              <option value="Maule">Maule</option>
+              <option value="Antofagasta">Antofagasta</option>
+              <option value="Coquimbo">Coquimbo</option>
+              <option value="Atacama">Atacama</option>
+              <option value="Tarapaca">Tarapacá</option>
+              <option value="Arica y Parinacota">Arica y Parinacota</option>
+              <option value="Los Rios">Los Ríos</option>
+              <option value="Aysen">Aysén</option>
+              <option value="Magallanes">Magallanes</option>
+              <option value="Nuble">Ñuble</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Teléfono</label>
+            <input type="text" id="etq-tel" placeholder="+56 9 1234 5678" oninput="etqPreview()">
+          </div>
+          <div class="field">
+            <label>RUT</label>
+            <input type="text" id="etq-rut" placeholder="12.345.678-9" oninput="etqPreview()">
+          </div>
+        </div>
+      </div>
+
+      <!-- ESTADO DEL PAGO -->
+      <div class="card">
+        <div class="card-title">💳 Estado del Pago</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
+          <div>
+            <div style="font-size:10px;font-weight:700;letter-spacing:1px;color:var(--text2);margin-bottom:6px">ENVÍO PAGADO</div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px">
+              <button id="etq-epi-si" class="pago-btn pb-si-on" onclick="etqSetEnvio('si')">✓ SÍ</button>
+              <button id="etq-epi-no" class="pago-btn"          onclick="etqSetEnvio('no')">✗ NO</button>
+            </div>
+            <div id="etq-emonto-w" style="display:none;margin-top:8px">
+              <div style="font-size:8px;letter-spacing:2px;color:var(--text3);margin-bottom:3px">MONTO A COBRAR</div>
+              <input type="number" id="etq-emonto" placeholder="0" min="0"
+                style="font-size:22px;font-weight:900;text-align:center;width:100%;background:var(--input-bg);border:2px solid var(--text);border-radius:6px;padding:8px 12px;color:var(--text)"
+                oninput="etqPreview()">
+            </div>
+          </div>
+          <div>
+            <div style="font-size:10px;font-weight:700;letter-spacing:1px;color:var(--text2);margin-bottom:6px">PRODUCTO PAGADO</div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px">
+              <button id="etq-ppi-si" class="pago-btn pb-si-on" onclick="etqSetProd('si')">✓ SÍ</button>
+              <button id="etq-ppi-no" class="pago-btn"          onclick="etqSetProd('no')">✗ NO</button>
+            </div>
+            <div id="etq-pmonto-w" style="display:none;margin-top:8px">
+              <div style="font-size:8px;letter-spacing:2px;color:var(--text3);margin-bottom:3px">MONTO A COBRAR</div>
+              <input type="number" id="etq-pmonto" placeholder="0" min="0"
+                style="font-size:22px;font-weight:900;text-align:center;width:100%;background:var(--input-bg);border:2px solid var(--text);border-radius:6px;padding:8px 12px;color:var(--text)"
+                oninput="etqPreview()">
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- REGISTRO -->
+      <div class="card">
+        <div class="card-title">🚚 Registro del Envío</div>
+        <div id="etq-reg-estado" style="font-size:15px;font-weight:900;letter-spacing:2px;text-align:center;padding:8px;border-radius:6px;border:2px solid var(--text);color:var(--text);background:var(--surface2);margin-bottom:14px">✓ PAGADO</div>
+        <div class="form-grid">
+          <div class="field">
+            <label>Transportista</label>
+            <select id="etq-trans">
+              <option selected>Fastway</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Tipo de Envío</label>
+            <input type="text" id="etq-tipo-envio" readonly style="background:var(--surface2);font-weight:700;cursor:default" value="Particular Pagado">
+          </div>
+          <div class="field">
+            <label>Tipo de Paquete</label>
+            <select id="etq-tipo-paq">
+              <option value="standard">Standard</option>
+              <option value="rural">Rural</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Método de Pago</label>
+            <select id="etq-metodo-pago">
+              <option value="efectivo">Efectivo</option>
+              <option value="transferencia">Transferencia</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Vendedor</label>
+            <input type="text" id="etq-vendedor" list="etq-dl-vendedores" placeholder="Nombre del vendedor">
+            <datalist id="etq-dl-vendedores"></datalist>
+          </div>
+          <div class="field" style="grid-column:1/-1">
+            <label>Notas del envío</label>
+            <input type="text" id="etq-nota" placeholder="Instrucciones, horario, referencia..." oninput="etqPreview()">
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- DERECHA: preview -->
+    <div style="position:sticky;top:20px">
+      <div class="card" style="padding:14px">
+        <div class="card-title">👁 Vista Previa</div>
+        <div style="overflow:hidden;display:flex;justify-content:center">
+          <div style="transform:scale(0.68);transform-origin:top center;margin-bottom:-120px">
+            <div id="etq-preview"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- hidden iframe for printing (avoids popup blocker) -->
+<iframe id="etq-print-frame" style="display:none;width:0;height:0;border:0" title="print"></iframe>
+
+<!-- ════════════════════════════ ETIQUETAS: JS ════════════════════════════ -->
 <script>
-/* ══ MÓDULO ETIQUETAS ══════════════════════════════════════════════════════ */
+/* ── state ── */
+var etqSt = { envio:'si', prod:'si' };
+var ETQ_EMP = [
+  { nombre:'DMP - Distribuidora de Materias Primas', web:'distribuidoramp.cl' },
+  { nombre:'Cybernetic SpA',                         web:'cybernetic.cl'      },
+  { nombre:'Mascokits SpA',                          web:'mascokits.cl'       }
+];
+var etqEmp = ETQ_EMP[0];
 
-// Estado de pago
-var etqEnvioPagado = 'si';
-var etqProdPagado  = 'si';
-
-function etqPagoEnvio(v) {
-  etqEnvioPagado = v;
-  document.getElementById('etq-envio-si').className = 'pago-btn pago-si' + (v==='si'?' active-si':'');
-  document.getElementById('etq-envio-no').className = 'pago-btn pago-no' + (v==='no'?' active-no':'');
-  document.getElementById('etq-envio-monto-wrap').style.display = (v==='si') ? 'block' : 'none';
+/* ── title case ── */
+function etqTC(s) {
+  var lw = ['de','del','la','las','los','el','y','a','en','con','por','sin','al'];
+  return s.replace(/\S+/g, function(w,i){ return i>0&&lw.indexOf(w.toLowerCase())!==-1?w.toLowerCase():w.charAt(0).toUpperCase()+w.slice(1).toLowerCase(); });
+}
+function etqApplyCase(el) {
+  var p=el.selectionStart; el.value=etqTC(el.value);
+  try{el.setSelectionRange(p,p);}catch(e){}
+  if(el.id==='etq-ciudad') etqAutoRural(el.value);
   etqPreview();
 }
-function etqPagoProd(v) {
-  etqProdPagado = v;
-  document.getElementById('etq-prod-si').className = 'pago-btn pago-si' + (v==='si'?' active-si':'');
-  document.getElementById('etq-prod-no').className = 'pago-btn pago-no' + (v==='no'?' active-no':'');
-  document.getElementById('etq-prod-monto-wrap').style.display = (v==='si') ? 'block' : 'none';
-  etqPreview();
+
+/* ── rural detection ── */
+var ETQ_RURAL=['padre hurtado','colina','lampa','til til','tiltil','buin','paine','calera de tango','alhue','curacavi','maria pinto','melipilla','san pedro','talagante','el monte','isla de maipo','penaflor','pirque','san jose de maipo','lo barnechea','graneros','mostazal','codegua','machali','donihue','coltauco','requinoa','rengo','malloa','quinta de tilcoco','pichidegua','san vicente','peumo','peralillo','lolol','chepica','santa cruz','palmilla','pumanque','navidad','litueche','paredones','yerbas buenas','colbun','longavi','parral','retiro','villa alegre','pencahue','curepto','constitucion','empedrado','maule','pelarco','rauco','licanten','hualane','iloca','vichuquen','sagrada familia','teno','romeral','angol','renaico','negrete','nacimiento','lebu','canete','contulmo','tirua','arauco','curanilahue','santa juana','coronel','lota','florida','hualqui','cabrero','yumbel','antuco','tucapel','quilleco','mulchen','quilaco','santa barbara','alto biobio','victoria','traiguen','lumaco','puren','curacautin','ercilla','collipulli','lonquimay','melipeuco','cunco','vilcun','lautaro','perquenco','galvarino','nueva imperial','carahue','tolten','freire','pitrufquen','gorbea','loncoche','villarrica','curarrehue','pucon','los sauces','purranque','rio negro','puyehue','san pablo','rio bueno','la union','lago ranco','futrono','los lagos','corral','paillaco','mariquina','lanco','los muermos','maullin','calbuco','fresia','frutillar','llanquihue','cochamo','chaiten','futaleufu','hualaihue','palena','cisnes','lago verde','puyuhuapi','cochrane','tortel'];
+function etqNorm(s){ return String(s||'').toLowerCase().replace(/[áàä]/g,'a').replace(/[éèë]/g,'e').replace(/[íìï]/g,'i').replace(/[óòö]/g,'o').replace(/[úùü]/g,'u').replace(/[ñ]/g,'n').replace(/[^a-z0-9 ]/g,' ').trim(); }
+function etqIsRural(c){ var n=etqNorm(c); return ETQ_RURAL.some(function(r){ var rn=etqNorm(r); return n===rn||n.indexOf(rn)!==-1||rn.indexOf(n)!==-1; }); }
+function etqAutoRural(c){ var s=document.getElementById('etq-tipo-paq'); if(s) s.value=etqIsRural(c)?'rural':'standard'; }
+
+/* ── pago toggles ── */
+function etqSetEnvio(v) {
+  etqSt.envio=v;
+  document.getElementById('etq-epi-si').className='pago-btn'+(v==='si'?' pb-si-on':'');
+  document.getElementById('etq-epi-no').className='pago-btn'+(v==='no'?' pb-no-on':'');
+  document.getElementById('etq-emonto-w').style.display=(v==='no')?'block':'none';
+  etqSyncReg(); etqPreview();
+}
+function etqSetProd(v) {
+  etqSt.prod=v;
+  document.getElementById('etq-ppi-si').className='pago-btn'+(v==='si'?' pb-si-on':'');
+  document.getElementById('etq-ppi-no').className='pago-btn'+(v==='no'?' pb-no-on':'');
+  document.getElementById('etq-pmonto-w').style.display=(v==='no')?'block':'none';
+  etqSyncReg(); etqPreview();
+}
+function etqSyncReg() {
+  var pagado=(etqSt.prod==='si');
+  var te=document.getElementById('etq-tipo-envio');
+  var es=document.getElementById('etq-reg-estado');
+  if(te) te.value=pagado?'Particular Pagado':'Particular Por Cobrar';
+  if(es) es.textContent=pagado?'✓ PAGADO':'⚠ POR COBRAR';
+  // Sync metodo pago visibility
+  var mp=document.getElementById('etq-metodo-pago');
+  if(mp) mp.disabled=pagado; // si pagado, no hay metodo a cobrar relevante
+}
+function etqChangeEmpresa() {
+  var v=parseInt(document.getElementById('etq-empresa').value)||0;
+  etqEmp=ETQ_EMP[v]||ETQ_EMP[0]; etqPreview();
+}
+function etqAutoNum() {
+  var n=String(parseInt(localStorage.getItem('etq_last_num')||'1000')+1);
+  document.getElementById('etq-num').value=n; etqPreview();
 }
 
-// Leer datos del formulario
+/* ── read form ── */
 function etqDatos() {
-  var num = document.getElementById('etq-num').value.trim() || '—';
-  var fecha = document.getElementById('etq-fecha').value;
-  if (fecha) { var p=fecha.split('-'); fecha=p[2]+'/'+p[1]+'/'+p[0]; } else { fecha = new Date().toLocaleDateString('es-CL'); }
-  return {
-    num:    num,
-    fecha:  fecha,
-    nombre: document.getElementById('etq-nombre').value.trim(),
-    dir1:   document.getElementById('etq-dir1').value.trim(),
-    ciudad: document.getElementById('etq-ciudad').value.trim(),
-    region: document.getElementById('etq-region').value,
-    tel:    document.getElementById('etq-tel').value.trim(),
-    rut:    document.getElementById('etq-rut').value.trim(),
-    nota:   document.getElementById('etq-nota').value.trim(),
-    envioPagado: etqEnvioPagado,
-    envioMonto:  document.getElementById('etq-envio-monto').value.trim(),
-    prodPagado:  etqProdPagado,
-    prodMonto:   document.getElementById('etq-prod-monto').value.trim(),
-  };
+  function v(id){ var e=document.getElementById(id); return e?e.value.trim():''; }
+  var fecha=v('etq-fecha');
+  if(fecha){var p=fecha.split('-');fecha=p[2]+'/'+p[1]+'/'+p[0];}
+  else fecha=new Date().toLocaleDateString('es-CL');
+  return { num:v('etq-num')||etqNextN(), fecha:fecha, empresa:etqEmp,
+    nombre:v('etq-nombre'), dir1:v('etq-dir1'), ciudad:v('etq-ciudad'),
+    region:v('etq-region'), tel:v('etq-tel'), rut:v('etq-rut'),
+    nota:v('etq-nota'), envio:etqSt.envio, emonto:v('etq-emonto'),
+    prod:etqSt.prod,   pmonto:v('etq-pmonto'),
+    trans:v('etq-trans'), tipoPaq:v('etq-tipo-paq'),
+    tipoEnvio:v('etq-tipo-envio'), metodoPago:v('etq-metodo-pago'),
+    vendedor:v('etq-vendedor') };
 }
+function etqNextN(){ return String(parseInt(localStorage.getItem('etq_last_num')||'1000')+1); }
+function etqFmt(n){ return '$ '+(parseInt(n)||0).toLocaleString('es-CL'); }
 
-// Tamaño de fuente ciudad (igual que plugin)
-function etqCityFs(city) {
-  var l = city.length;
-  if (l<=8)  return '32px';
-  if (l<=11) return '26px';
-  if (l<=15) return '20px';
-  if (l<=20) return '16px';
-  return '13px';
-}
-
-// Barcode decorativo
-function etqBarcode(num) {
-  var seed = parseInt((num+'').replace(/\D/g,'')) || 1234;
-  var out = '';
-  for (var i=0;i<48;i++){
-    seed=((seed*1103515245+12345)&0x7fffffff);
-    var w=(seed%3)+1, h=(i%5===0)?26:((i%3===0)?20:14);
-    out+='<span style="width:'+w+'px;height:'+h+'px"></span>';
-  }
+/* ── barcode ── */
+function etqBC(num) {
+  var seed=parseInt(String(num).replace(/\D/g,''))||1234, out='';
+  for(var i=0;i<48;i++){seed=((seed*1103515245+12345)&0x7fffffff);var w=(seed%3)+1,h=(i%5===0)?26:((i%3===0)?20:14);out+='<span style="width:'+w+'px;height:'+h+'px"></span>';}
   return out;
 }
+function etqCityFS(c){ var l=c.length; return l<=8?'32px':l<=11?'26px':l<=15?'20px':l<=20?'16px':'13px'; }
 
-// Badges de pago
-function etqPagoBadges(d) {
-  var html = '<div class="etq-pago-wrap">';
-  if (d.envioPagado==='si') {
-    html += '<span class="etq-pago-tag etq-tag-green">ENVÍO PAGADO' + (d.envioMonto?' · $'+parseInt(d.envioMonto).toLocaleString('es-CL'):'') + '</span>';
-  } else {
-    html += '<span class="etq-pago-tag etq-tag-red">ENVÍO NO PAGADO</span>';
-  }
-  if (d.prodPagado==='si') {
-    html += '<span class="etq-pago-tag etq-tag-green">PRODUCTO PAGADO' + (d.prodMonto?' · $'+parseInt(d.prodMonto).toLocaleString('es-CL'):'') + '</span>';
-  } else {
-    html += '<span class="etq-pago-tag etq-tag-red">PRODUCTO NO PAGADO</span>';
-  }
-  html += '</div>';
-  return html;
-}
-
-// Construir HTML de la etiqueta
-function etqBuildHTML(d, forPrint) {
-  var cityUpper = d.ciudad.toUpperCase();
-  var cityFs    = etqCityFs(cityUpper);
-  var SENDER    = 'DMP - Distribuidora de Materias Primas';
-  var WEB       = 'distribuidoramp.cl';
-
-  var priceCols = forPrint
-    ? 'background:#f8f8f8;'
-    : 'background:#f8f8f8;';
-
-  return '<div class="etq-label">' +
-    '<div class="etq-hdr">' +
-      '<div class="etq-hdr-l">' +
-        '<div class="etq-brand">' + SENDER + '</div>' +
-        '<div class="etq-web">' + WEB + '</div>' +
-        '<div class="etq-express-l">ENVÍO EXPRESS</div>' +
-      '</div>' +
-      '<div class="etq-hdr-r">' +
-        '<div class="etq-num-lbl">N° ' + (d.num||'—') + '</div>' +
-        '<div class="etq-date-lbl">' + d.fecha + '</div>' +
-        '<div class="etq-date-lbl">Despachado</div>' +
-      '</div>' +
-    '</div>' +
-    '<div class="etq-body">' +
-      '<div class="etq-col-l">' +
-        '<div class="etq-dest-tag">▼ DESTINATARIO</div>' +
-        '<div class="etq-dest-name">' + (d.nombre||'—') + '</div>' +
-        '<div class="etq-dest-addr">' + (d.dir1||'') + '</div>' +
-        (d.tel  ? '<div class="etq-dest-f"><b>Tel:</b> '+d.tel+'</div>' : '') +
-        (d.rut  ? '<div class="etq-dest-f"><b>RUT:</b> '+d.rut+'</div>' : '') +
-        etqPagoBadges(d) +
-        (d.nota ? '<div class="etq-dest-note">'+d.nota+'</div>' : '') +
-      '</div>' +
-      '<div class="etq-col-r">' +
-        '<div class="etq-city" style="font-size:'+cityFs+'">' + (cityUpper||'—') + '</div>' +
-        (d.region ? '<div class="etq-region">' + d.region.toUpperCase() + '</div>' : '') +
-      '</div>' +
-    '</div>' +
-    '<div class="etq-foot">' +
-      '<div class="etq-bc">' + etqBarcode(d.num) + '</div>' +
-      '<div class="etq-bc-num">' + (d.num||'—') + '</div>' +
-      '<div class="etq-express-b">ENVÍO EXPRESS</div>' +
-    '</div>' +
+/* ── build label HTML ── */
+function etqBuild(d) {
+  var cu=(d.ciudad||'').toUpperCase();
+  var tags='';
+  if(d.envio==='si')      tags+='<span class="etq-tag">ENVÍO PAG.</span>';
+  else if(d.emonto)       tags+='<span class="etq-tag etq-tag-inv">COB. ENV.</span>';
+  if(d.prod==='si')       tags+='<span class="etq-tag">PROD. PAG.</span>';
+  else if(d.pmonto)       tags+='<span class="etq-tag etq-tag-inv">COB. PROD.</span>';
+  var total=(parseInt(d.emonto)||0)+(parseInt(d.pmonto)||0);
+  var pagado=(d.envio==='si'&&d.prod==='si');
+  var stBlock='<div class="etq-status">';
+  stBlock+=pagado?'<div class="etq-status-txt">&#10003; PAGADO</div>':'<div class="etq-status-txt">&#9888; POR COBRAR</div>';
+  if(!pagado&&total>0) stBlock+='<div class="etq-status-monto">'+etqFmt(total)+'</div>';
+  stBlock+='</div>';
+  return '<div class="etq-label">'+
+    '<div class="etq-hdr">'+
+      '<div class="etq-hdr-l">'+
+        '<div class="etq-brand">'+(d.empresa?d.empresa.nombre:'DMP')+'</div>'+
+        '<div class="etq-web">'+(d.empresa?d.empresa.web:'')+'</div>'+
+        '<div class="etq-exp-l">ENV&#205;O EXPRESS</div>'+
+      '</div>'+
+      '<div class="etq-hdr-r">'+
+        '<div class="etq-num-l">N&#176; '+(d.num||'&#8212;')+'</div>'+
+        '<div class="etq-date-l">'+d.fecha+'</div>'+
+        '<div class="etq-date-l">Despachado</div>'+
+      '</div>'+
+    '</div>'+
+    '<div class="etq-body">'+
+      '<div class="etq-col-l">'+
+        '<div class="etq-dtag">&#9660; DESTINATARIO</div>'+
+        '<div class="etq-dname">'+(d.nombre||'&#8212;')+'</div>'+
+        '<div class="etq-daddr">'+(d.dir1||'')+'</div>'+
+        (d.tel?'<div class="etq-df"><b>Tel:</b> '+d.tel+'</div>':'')+
+        (d.rut?'<div class="etq-df"><b>RUT:</b> '+d.rut+'</div>':'')+
+        (d.nota?'<div class="etq-dnote">'+d.nota+'</div>':'')+
+        (tags?'<div class="etq-tags">'+tags+'</div>':'')+
+        stBlock+
+      '</div>'+
+      '<div class="etq-col-r">'+
+        '<div class="etq-city" style="font-size:'+etqCityFS(cu)+'">'+(cu||'&#8212;')+'</div>'+
+        (d.region?'<div class="etq-region">'+d.region.toUpperCase()+'</div>':'')+
+      '</div>'+
+    '</div>'+
+    '<div class="etq-foot">'+
+      '<div class="etq-bc">'+etqBC(d.num)+'</div>'+
+      '<div class="etq-bc-num">'+(d.num||'&#8212;')+'</div>'+
+      '<div class="etq-exp-b">ENV&#205;O EXPRESS</div>'+
+    '</div>'+
   '</div>';
 }
 
-// Preview en vivo
+/* ── preview ── */
 function etqPreview() {
-  var d = etqDatos();
-  var el = document.getElementById('etq-preview');
-  if (el) el.innerHTML = etqBuildHTML(d, false);
+  var el=document.getElementById('etq-preview');
+  if(el) el.innerHTML=etqBuild(etqDatos());
 }
 
-// Generar HTML en nueva ventana para imprimir
-function etqGenerarHTML() {
-  var d = etqDatos();
-  if (!d.nombre || !d.ciudad) { alert('Completa al menos Nombre y Ciudad/Comuna.'); return; }
-  var labelHtml = etqBuildHTML(d, true);
-  var win = window.open('', '_blank', 'width=500,height=780');
-  win.document.write('<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Etiqueta ' + d.num + '</title>' +
-    '<style>' +
-    '*{box-sizing:border-box;margin:0;padding:0}' +
-    'body{font-family:Arial,Helvetica,sans-serif;background:#ccc;padding:16px;display:flex;flex-direction:column;align-items:center;gap:12px}' +
-    '.toolbar{display:flex;gap:8px;width:10cm}' +
-    '.toolbar button{flex:1;padding:8px;border:none;border-radius:5px;font-weight:700;cursor:pointer;font-size:12px}' +
-    '.btn-p{background:#111;color:#fff}.btn-p:hover{background:#333}' +
-    '.btn-c{background:#eee;color:#333}' +
-    '.etq-label{width:10cm;min-height:15cm;background:#fff;border:2px solid #000;border-radius:3px;overflow:hidden;display:flex;flex-direction:column;font-family:Arial,Helvetica,sans-serif;color:#000;box-shadow:0 4px 20px rgba(0,0,0,.2)}' +
-    '.etq-hdr{background:#000;padding:7px 12px;display:flex;justify-content:space-between;align-items:flex-start}' +
-    '.etq-hdr-l{flex:1;min-width:0}.etq-hdr-r{text-align:right;flex-shrink:0;margin-left:8px}' +
-    '.etq-brand{color:#fff;font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:.3px;line-height:1.25}' +
-    '.etq-web{color:#aaa;font-size:6.5px;margin-top:1px;font-style:italic}' +
-    '.etq-express-l{display:inline-block;background:#fff;color:#000;font-size:6.5px;font-weight:900;letter-spacing:1.5px;padding:2px 5px;border-radius:2px;margin-top:4px}' +
-    '.etq-num-lbl{color:#fff;font-size:16px;font-weight:900;letter-spacing:.5px}' +
-    '.etq-date-lbl{color:#777;font-size:6.5px;margin-top:1px}' +
-    '.etq-body{display:flex;flex:1;border-bottom:2px solid #000}' +
-    '.etq-col-l{flex:1.15;padding:8px 10px;border-right:1px dashed #bbb;display:flex;flex-direction:column;gap:2px}' +
-    '.etq-dest-tag{font-size:6.5px;letter-spacing:2px;color:#999;font-weight:700;text-transform:uppercase;margin-bottom:3px}' +
-    '.etq-dest-name{font-size:16px;font-weight:900;color:#000;line-height:1.15}' +
-    '.etq-dest-addr{font-size:10px;color:#222;line-height:1.4;margin-top:2px}' +
-    '.etq-dest-f{font-size:9.5px;color:#333;margin-top:2px}' +
-    '.etq-dest-f b{color:#000}' +
-    '.etq-dest-note{font-size:8px;color:#555;background:#f5f5f5;border:1px solid #ddd;border-radius:2px;padding:3px 5px;margin-top:5px;line-height:1.4}' +
-    '.etq-pago-wrap{display:flex;flex-wrap:wrap;gap:4px;margin-top:7px}' +
-    '.etq-pago-tag{font-size:8px;font-weight:900;letter-spacing:.5px;padding:3px 7px;border-radius:3px;border:1.5px solid}' +
-    '.etq-tag-green{background:rgba(39,168,94,0.12);border-color:#27a85e;color:#1a7a44}' +
-    '.etq-tag-red{background:rgba(224,48,80,0.1);border-color:#e03050;color:#c02040}' +
-    '.etq-col-r{flex:.85;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:8px 6px;background:#f8f8f8;text-align:center;gap:5px}' +
-    '.etq-city{font-weight:900;color:#000;line-height:1.05;text-transform:uppercase;letter-spacing:.3px;word-break:break-word;text-align:center}' +
-    '.etq-region{font-size:7.5px;color:#555;text-transform:uppercase;letter-spacing:.8px;font-weight:700;border-top:1px solid #ccc;padding-top:4px;margin-top:2px;width:100%;text-align:center}' +
-    '.etq-foot{background:#fff;padding:5px 0 4px;flex-shrink:0;text-align:center;display:flex;flex-direction:column;align-items:center;gap:2px}' +
-    '.etq-bc{display:flex;align-items:flex-end;justify-content:center;gap:1px;height:26px}' +
-    '.etq-bc span{background:#000;display:inline-block;min-width:1px}' +
-    '.etq-bc-num{font-family:Courier New,monospace;font-size:8.5px;letter-spacing:2px;color:#333}' +
-    '.etq-express-b{font-size:13px;font-weight:900;letter-spacing:2px;color:#000;margin-top:2px}' +
-    '@media print{*{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}body{background:#fff;padding:0}.toolbar{display:none}.etq-label{box-shadow:none;border:1px solid #000}@page{margin:0;size:10cm 15cm portrait}}' +
-    '</style></head><body>' +
-    '<div class="toolbar"><button class="btn-p" onclick="window.print()">🖨️ Imprimir / PDF</button><button class="btn-c" onclick="window.close()">✕ Cerrar</button></div>' +
-    labelHtml +
-    '</body></html>');
-  win.document.close();
+/* ── print via iframe (no popup) ── */
+function etqImprimir() {
+  var d=etqDatos();
+  if(!d.nombre||!d.ciudad){alert('Completa Nombre y Ciudad/Comuna.');return;}
+  var css=document.getElementById('etq-styles').innerHTML;
+  var html='<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Etiqueta '+d.num+'</title>'
+    +'<style>*{box-sizing:border-box;margin:0;padding:0}body{font-family:Arial,sans-serif;background:#ccc;padding:16px;display:flex;flex-direction:column;align-items:center;gap:12px}.etq-print-bar{display:flex;gap:8px;width:10cm}.etq-print-bar button{flex:1;padding:9px;border:none;border-radius:5px;font-weight:700;cursor:pointer;font-size:12px}.bp{background:#000;color:#fff}.bc{background:#eee;color:#333}'+css
+    +'@media print{.etq-print-bar{display:none!important}body{background:#fff!important;padding:0!important}.etq-label{box-shadow:none!important}@page{margin:0;size:10cm 15cm portrait}}</style>'
+    +'</head><body>'
+    +'<div class="etq-print-bar"><button class="bp" onclick="window.print()">Imprimir / PDF</button><button class="bc" onclick="window.close()">Cerrar</button></div>'
+    +etqBuild(d)
+    +'</body></html>';
+  var blob=new Blob([html],{type:'text/html;charset=utf-8'});
+  var url=URL.createObjectURL(blob);
+  var fr=document.getElementById('etq-print-frame');
+  if(fr){ fr.style.display='none'; fr.src=url; fr.onload=function(){fr.contentWindow.print();setTimeout(function(){URL.revokeObjectURL(url);},3000);}; }
 }
 
-// Generar ZPL
-function etqGenerarZPL() {
-  var d = etqDatos();
-  if (!d.nombre || !d.ciudad) { alert('Completa al menos Nombre y Ciudad/Comuna.'); return; }
+/* ── ZPL ── */
+function etqZPL() {
+  var d=etqDatos();
+  if(!d.nombre||!d.ciudad){alert('Completa Nombre y Ciudad/Comuna.');return;}
+  function asc(s){var m={'á':'a','é':'e','í':'i','ó':'o','ú':'u','ü':'u','ñ':'n','Á':'A','É':'E','Í':'I','Ó':'O','Ú':'U','Ü':'U','Ñ':'N'};return s.split('').map(function(c){return m[c]||c;}).join('').replace(/[^\x00-\x7F]/g,'').replace(/[\^~]/g,'');}
+  var city=asc(d.ciudad).toUpperCase(),reg=asc(d.region).toUpperCase();
+  var cl=city.length,cfs=cl<=8?74:cl<=11?58:cl<=15?44:cl<=20?34:26;
+  var cy=Math.max(200,456-Math.floor(cfs/2));
+  var py=310,pl='';
+  if(d.envio==='si'){pl+='^FO14,'+py+'^A0N,18,18^FDENVIO PAGADO^FS\n';py+=22;}
+  else if(d.emonto){pl+='^FO14,'+py+'^A0N,18,18^FDCOBRAR ENV '+asc(etqFmt(d.emonto))+'^FS\n';py+=22;}
+  if(d.prod==='si'){pl+='^FO14,'+py+'^A0N,18,18^FDPRODUCTO PAGADO^FS\n';py+=22;}
+  else if(d.pmonto){pl+='^FO14,'+py+'^A0N,18,18^FDCOBRAR PROD '+asc(etqFmt(d.pmonto))+'^FS\n';py+=22;}
+  if(d.nota){pl+='^FO14,'+(py+4)+'^A0N,16,16^FD"'+asc(d.nota)+'"^FS\n';}
+  var sn=asc(d.empresa?d.empresa.nombre:'DMP').toUpperCase(),sw=asc(d.empresa?d.empresa.web:'distribuidoramp.cl');
+  var zpl='^XA\n^CI0\n^PW812\n^LL1218\n^LH0,0\n\n'
+    +'^FO0,0^GB812,145,145^FS\n'
+    +'^FO14,12^A0N,20,20^FR^FD'+sn+'^FS\n'
+    +'^FO14,38^A0N,16,16^FR^FD'+sw+'^FS\n'
+    +'^FO14,60^GB190,36,36^FS\n'
+    +'^FO18,66^A0N,22,22^FDENVIO EXPRESS^FS\n'
+    +'^FO520,10^A0N,48,48^FR^FDN '+asc(d.num)+'^FS\n'
+    +'^FO520,64^A0N,18,18^FR^FD'+d.fecha+'^FS\n'
+    +'^FO520,86^A0N,18,18^FR^FDDespachado^FS\n\n'
+    +'^FO0,145^GB812,3,3^FS\n\n'
+    +'^FO14,158^A0N,18,18^FDDESTINATARIO^FS\n'
+    +'^FO14,180^A0N,48,48^FD'+asc(d.nombre)+'^FS\n'
+    +'^FO14,238^A0N,26,26^FD'+asc(d.dir1)+'^FS\n'
+    +(d.tel?'^FO14,272^A0N,24,24^FDTel: '+asc(d.tel)+'^FS\n':'')
+    +(d.rut?'^FO14,298^A0N,20,20^FDRUT: '+asc(d.rut)+'^FS\n':'')
+    +pl+'\n'
+    +'^FO500,145^GB3,626,3^FS\n\n'
+    +'^FO503,'+cy+'^A0N,'+cfs+','+cfs+'^FB299,2,10,C^FD'+city+'^FS\n'
+    +(reg?'^FO503,'+(cy+cfs*2+20)+'^GB299,3,3^FS\n^FO503,'+(cy+cfs*2+32)+'^A0N,18,18^FB299,2,6,C^FD'+reg+'^FS\n':'')
+    +'\n^FO0,771^GB812,3,3^FS\n'
+    +'^FO0,782^BY3,3,110^BCN,110,N,N,N^FB812,1,0,C^FD'+asc(d.num)+'^FS\n'
+    +'^FO0,900^A0N,26,26^FB812,1,0,C^FD'+asc(d.num)+'^FS\n'
+    +'^FO0,1046^A0N,56,56^FB812,1,0,C^FDENVIO EXPRESS^FS\n\n^XZ\n';
+  var blob=new Blob([zpl],{type:'application/octet-stream'});
+  var url=URL.createObjectURL(blob);
+  var a=document.createElement('a');a.href=url;a.download='etiqueta_'+d.num+'.zpl';a.click();
+  setTimeout(function(){URL.revokeObjectURL(url);},2000);
+}
 
-  function ascii(s) {
-    var m={'á':'a','é':'e','í':'i','ó':'o','ú':'u','ü':'u','ñ':'n','Á':'A','É':'E','Í':'I','Ó':'O','Ú':'U','Ü':'U','Ñ':'N'};
-    s = s.split('').map(function(c){return m[c]||c;}).join('');
-    return s.replace(/[^\x00-\x7F]/g,'').replace(/[\^~]/g,'');
-  }
-
-  var city    = ascii(d.ciudad).toUpperCase();
-  var region  = ascii(d.region).toUpperCase();
-  var nombre  = ascii(d.nombre);
-  var dir     = ascii(d.dir1);
-  var sender  = 'DMP - DISTRIBUIDORA DE MATERIAS PRIMAS';
-  var num     = d.num;
-
-  // Tamaño fuente ciudad
-  var clen = city.length;
-  var cfs = clen<=8?74:(clen<=11?58:(clen<=15?44:(clen<=20?34:26)));
-  var cy  = Math.max(200, 456 - Math.floor(cfs/2));
-
-  // Badges de pago
-  var pagoLines = '';
-  var py = 340;
-  if (d.envioPagado==='si') {
-    var em = d.envioMonto ? ' $'+parseInt(d.envioMonto).toLocaleString('es-CL') : '';
-    pagoLines += '^FO14,'+py+'^A0N,18,18^FDENVIO PAGADO'+em+'^FS\n'; py+=22;
+/* ── guardar ── */
+function etqGuardar() {
+  var d=etqDatos();
+  if(!d.nombre||!d.ciudad){alert('Completa al menos Nombre y Ciudad.');return;}
+  localStorage.setItem('etq_last_num',parseInt(d.num)||1001);
+  var reg={ts:new Date().toISOString(),num:d.num,fecha:d.fecha,
+    empresa:d.empresa?d.empresa.nombre:'',destinatario:d.nombre,
+    direccion:d.dir1,ciudad:d.ciudad,region:d.region,
+    telefono:d.tel,rut:d.rut,transportista:d.trans,
+    tipoPaquete:d.tipoPaq,tipoEnvio:d.tipoEnvio,
+    metodoPago:d.metodoPago,
+    envioPagado:d.envio,envioMonto:d.emonto||0,
+    prodPagado:d.prod,prodMonto:d.pmonto||0,
+    vendedor:d.vendedor,nota:d.nota};
+  // Firebase
+  if(typeof addDoc==='function'&&typeof collection==='function'&&window.db) {
+    addDoc(collection(window.db,'etiquetas'),reg)
+      .then(function(){if(typeof showToast==='function')showToast('Registro N'+d.num+' guardado');})
+      .catch(function(e){
+        var arr=JSON.parse(localStorage.getItem('etq_reg')||'[]');arr.push(reg);
+        localStorage.setItem('etq_reg',JSON.stringify(arr));
+        if(typeof showToast==='function')showToast('Guardado localmente (sin Firebase)');
+      });
   } else {
-    pagoLines += '^FO14,'+py+'^A0N,18,18^FDENVIO NO PAGADO^FS\n'; py+=22;
+    var arr=JSON.parse(localStorage.getItem('etq_reg')||'[]');arr.push(reg);
+    localStorage.setItem('etq_reg',JSON.stringify(arr));
+    if(typeof showToast==='function')showToast('Guardado localmente');
+    else alert('Guardado localmente. N: '+d.num);
   }
-  if (d.prodPagado==='si') {
-    var pm = d.prodMonto ? ' $'+parseInt(d.prodMonto).toLocaleString('es-CL') : '';
-    pagoLines += '^FO14,'+py+'^A0N,18,18^FDPRODUCTO PAGADO'+pm+'^FS\n'; py+=22;
-  } else {
-    pagoLines += '^FO14,'+py+'^A0N,18,18^FDPRODUCTO NO PAGADO^FS\n'; py+=22;
-  }
-  if (d.nota) { pagoLines += '^FO14,'+py+'^A0N,16,16^FD"'+ascii(d.nota)+'"^FS\n'; }
-
-  var zpl =
-    '^XA\n^CI0\n^PW812\n^LL1218\n^LH0,0\n\n' +
-    '^FO0,0^GB812,145,145^FS\n' +
-    '^FO14,12^A0N,22,22^FR^FD'+sender+'^FS\n' +
-    '^FO14,40^A0N,16,16^FR^FDdistribuidoramp.cl^FS\n' +
-    '^FO14,64^GB190,36,36^FS\n' +
-    '^FO18,70^A0N,22,22^FDENVIO EXPRESS^FS\n' +
-    '^FO530,10^A0N,48,48^FR^FDN '+num+'^FS\n' +
-    '^FO530,64^A0N,18,18^FR^FD'+d.fecha+'^FS\n' +
-    '^FO530,86^A0N,18,18^FR^FDDespachado^FS\n\n' +
-    '^FO0,145^GB812,3,3^FS\n\n' +
-    '^FO14,158^A0N,18,18^FDDESTINATARIO^FS\n' +
-    '^FO14,180^A0N,48,48^FD'+nombre+'^FS\n' +
-    '^FO14,238^A0N,26,26^FD'+dir+'^FS\n' +
-    (d.tel   ? '^FO14,272^A0N,24,24^FDTel: '+ascii(d.tel)+'^FS\n' : '') +
-    (d.rut   ? '^FO14,300^A0N,20,20^FDRUT: '+ascii(d.rut)+'^FS\n' : '') +
-    pagoLines +
-    '\n^FO500,145^GB3,626,3^FS\n\n' +
-    '^FO503,'+cy+'^A0N,'+cfs+','+cfs+'^FB299,2,10,C^FD'+city+'^FS\n' +
-    (region ? '^FO503,'+(cy+cfs*2+20)+'^GB299,3,3^FS\n^FO503,'+(cy+cfs*2+32)+'^A0N,18,18^FB299,2,6,C^FD'+region+'^FS\n' : '') +
-    '\n^FO0,771^GB812,3,3^FS\n' +
-    '^FO0,782^BY3,3,110^BCN,110,N,N,N^FB812,1,0,C^FD'+num+'^FS\n' +
-    '^FO0,900^A0N,26,26^FB812,1,0,C^FD'+num+'^FS\n' +
-    '^FO0,1046^A0N,56,56^FB812,1,0,C^FDENVIO EXPRESS^FS\n\n' +
-    '^XZ\n';
-
-  var blob = new Blob([zpl], {type:'application/octet-stream'});
-  var url  = URL.createObjectURL(blob);
-  var a    = document.createElement('a');
-  a.href   = url;
-  a.download = 'etiqueta_' + num + '.zpl';
-  a.click();
-  URL.revokeObjectURL(url);
+  // Avanzar numero
+  var nxt=String(parseInt(d.num)+1);
+  document.getElementById('etq-num').value=nxt;
+  if(typeof showToast==='function')showToast('N '+d.num+' guardado - Siguiente: '+nxt);
 }
 
-// Inicializar preview y fecha al entrar a la página
-document.addEventListener('DOMContentLoaded', function() {
-  var fi = document.getElementById('etq-fecha');
-  if (fi) fi.value = new Date().toISOString().slice(0,10);
-  // Preview inicial vacío
-  var pre = document.getElementById('etq-preview');
-  if (pre) {
-    pre.innerHTML = etqBuildHTML({
-      num:'0000',fecha:new Date().toLocaleDateString('es-CL'),
-      nombre:'Nombre Destinatario',dir1:'Dirección de envío 1234',
-      ciudad:'Ciudad',region:'',tel:'',rut:'',nota:'',
-      envioPagado:'si',envioMonto:'',prodPagado:'si',prodMonto:''
-    }, false);
+/* ── init when page shown ── */
+function etqInit() {
+  var fi=document.getElementById('etq-fecha');
+  if(fi&&!fi.value)fi.value=new Date().toISOString().slice(0,10);
+  var ni=document.getElementById('etq-num');
+  if(ni&&!ni.value)ni.value=etqNextN();
+  // Transportistas from app state
+  var ts=document.getElementById('etq-trans');
+  if(ts&&window.state&&window.state.transportistas&&window.state.transportistas.length){
+    ts.innerHTML=window.state.transportistas.map(function(t){
+      return '<option'+(t==='Fastway'?' selected':'')+'>'+t+'</option>';
+    }).join('');
   }
-});
+  // Vendedores datalist
+  var dl=document.getElementById('etq-dl-vendedores');
+  if(dl&&window.state&&window.state.vendedores){
+    dl.innerHTML=window.state.vendedores.map(function(v){return '<option value="'+v+'">';}).join('');
+  }
+  etqSyncReg();
+  etqPreview();
+}
 
-// Trigger preview on any input in etiquetas page
-document.addEventListener('input', function(e) {
-  if (document.getElementById('page-etiquetas').classList.contains('active')) {
-    etqPreview();
-  }
-});
+/* ── hook into showPage ── */
+(function(){
+  var _sp=window.showPage;
+  window.showPage=function(id,el){
+    if(_sp)_sp(id,el);
+    if(id==='etiquetas')setTimeout(etqInit,60);
+  };
+})();
 </script>
-</body>
-</html>
